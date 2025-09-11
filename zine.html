@@ -6,6 +6,8 @@
     <title>PDF to Zine Maker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         /* Based on zserge/zine CSS structure */
@@ -219,6 +221,14 @@
                     </svg>
                     Print Zine
                 </button>
+                <button id="savePdfBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:scale-105 flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    Save as PDF
+                </button>
             </div>
         </div>
 
@@ -235,6 +245,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const zine = document.querySelector('.zine');
             const printBtn = document.getElementById('printBtn');
+            const savePdfBtn = document.getElementById('savePdfBtn');
             const pdfUpload = document.getElementById('pdf-upload');
             const uploadText = document.getElementById('upload-text');
             const uploadStatus = document.getElementById('upload-status');
@@ -372,6 +383,131 @@
                 }
                 
                 window.print();
+            });
+
+            // Save as PDF button handler
+            savePdfBtn.addEventListener('click', async () => {
+                const hasContent = Array.from(document.querySelectorAll('.page-content img')).some(img => img.src && img.src !== '');
+                
+                if (!hasContent) {
+                    alert('Please upload a PDF first before saving.');
+                    return;
+                }
+
+                try {
+                    // Show loading state
+                    savePdfBtn.disabled = true;
+                    savePdfBtn.innerHTML = `
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Generating PDF...
+                    `;
+
+                    // Create a temporary container for the print layout
+                    const printContainer = document.createElement('div');
+                    printContainer.style.position = 'absolute';
+                    printContainer.style.left = '-9999px';
+                    printContainer.style.top = '0';
+                    printContainer.style.width = '210mm'; // A4 width
+                    printContainer.style.height = '297mm'; // A4 height
+                    printContainer.style.background = 'white';
+                    printContainer.style.padding = '0';
+                    printContainer.style.margin = '0';
+                    printContainer.style.overflow = 'hidden';
+                    
+                    // Clone the zine with print styles
+                    const zineClone = zine.cloneNode(true);
+                    zineClone.style.display = 'grid';
+                    zineClone.style.gridTemplateAreas = '"page4 page3 page2 page1" "page5 page6 page7 page8"';
+                    zineClone.style.width = '100%';
+                    zineClone.style.height = '100%';
+                    zineClone.style.gap = '0';
+                    zineClone.style.padding = '0';
+                    zineClone.style.margin = '0';
+                    zineClone.style.position = 'fixed';
+                    zineClone.style.top = '0';
+                    zineClone.style.left = '0';
+                    
+                    // Add cut line
+                    const cutLine = document.createElement('div');
+                    cutLine.style.position = 'absolute';
+                    cutLine.style.top = '50%';
+                    cutLine.style.left = '0';
+                    cutLine.style.right = '0';
+                    cutLine.style.height = '2px';
+                    cutLine.style.background = 'repeating-linear-gradient(to right, #000 0px, #000 10px, transparent 10px, transparent 20px)';
+                    cutLine.style.zIndex = '10';
+                    cutLine.style.pointerEvents = 'none';
+                    
+                    // Apply print styles to cloned elements
+                    const pages = zineClone.querySelectorAll('article');
+                    pages.forEach((page, index) => {
+                        page.style.width = '100%';
+                        page.style.height = '100%';
+                        page.style.border = 'none';
+                        page.style.boxShadow = 'none';
+                        
+                        // Rotate top row pages
+                        if (index < 4) {
+                            page.style.transform = 'rotate(180deg)';
+                        }
+                        
+                        // Hide page numbers
+                        const pageNumber = page.querySelector('.page-number');
+                        if (pageNumber) {
+                            pageNumber.style.display = 'none';
+                        }
+                    });
+                    
+                    printContainer.appendChild(zineClone);
+                    printContainer.appendChild(cutLine);
+                    document.body.appendChild(printContainer);
+                    
+                    // Capture the print layout
+                    const canvas = await html2canvas(printContainer, {
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: '#ffffff',
+                        width: 210 * 3.78, // Convert mm to pixels (210mm * 3.78px/mm)
+                        height: 297 * 3.78  // Convert mm to pixels (297mm * 3.78px/mm)
+                    });
+                    
+                    // Clean up
+                    document.body.removeChild(printContainer);
+                    
+                    // Create PDF
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF({
+                        orientation: 'landscape',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+                    
+                    // Add the canvas image to PDF
+                    const imgData = canvas.toDataURL('image/png');
+                    pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+                    
+                    // Save the PDF
+                    pdf.save('zine.pdf');
+                    
+                } catch (error) {
+                    console.error('Error generating PDF:', error);
+                    alert('Error generating PDF. Please try again.');
+                } finally {
+                    // Reset button state
+                    savePdfBtn.disabled = false;
+                    savePdfBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        Save as PDF
+                    `;
+                }
             });
 
 
