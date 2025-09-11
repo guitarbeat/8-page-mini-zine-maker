@@ -56,7 +56,7 @@ body {
     grid-template-rows: repeat(2, 1fr);
     gap: 1rem;
     padding: 2rem;
-    max-width: 1200px;
+    max-width: 100%;
     margin: 0 auto;
 }
 
