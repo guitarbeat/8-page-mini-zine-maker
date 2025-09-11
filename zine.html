@@ -431,6 +431,9 @@
                         const maxPages = Math.min(8, numPages);
 
                         // Process pages sequentially to avoid memory issues
+                        // Map PDF pages to zine positions: PDF page 1 -> Zine page 2, PDF page 2 -> Zine page 1, etc.
+                        const pageMapping = [2, 1, 4, 3, 5, 6, 7, 8]; // PDF page index -> Zine page position
+                        
                         for (let i = 1; i <= maxPages; i++) {
                             try {
                                 const page = await pdf.getPage(i);
@@ -469,12 +472,14 @@
                                 await page.render(renderContext).promise;
                                 
                                 // Convert to PNG data URL with high quality
-                                const imgPreview = document.getElementById(`preview-${i}`);
+                                // Map PDF page to zine position (PDF page 1 goes to zine page 2)
+                                const zinePageNumber = pageMapping[i - 1];
+                                const imgPreview = document.getElementById(`preview-${zinePageNumber}`);
                                 if (imgPreview) {
                                     imgPreview.src = canvas.toDataURL('image/png', 1.0);
                                     
                                     // Hide placeholder
-                                    const placeholder = document.querySelector(`#content-${i} .placeholder`);
+                                    const placeholder = document.querySelector(`#content-${zinePageNumber} .placeholder`);
                                     if (placeholder) {
                                         placeholder.style.display = 'none';
                                     }
