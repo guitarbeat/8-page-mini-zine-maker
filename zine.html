@@ -424,18 +424,7 @@
                 zine.appendChild(page);
             }
 
-            // Function to load reference image on page 2
-            function loadReferenceImage() {
-                const imgPreview = document.getElementById('preview-2');
-                imgPreview.src = referenceImageUrl;
-                
-                // Hide placeholder for page 2
-                const placeholder = document.querySelector('#content-2 .placeholder');
-                placeholder.style.display = 'none';
-            }
-            
-            // Load reference image automatically
-            loadReferenceImage();
+            // Reference image will be added to back side during print/export
 
 
             // PDF upload handler with improved image conversion and error handling
@@ -537,8 +526,7 @@
                             }
                         }
                         
-                        // Ensure reference image is loaded
-                        loadReferenceImage();
+                        // Reference image will be added to back side during print/export
                         
                         uploadText.textContent = 'Upload New PDF';
                         uploadStatus.textContent = `Successfully converted ${maxPages} pages to images. Ready to print!`;
@@ -561,6 +549,122 @@
                 fileReader.readAsArrayBuffer(file);
             });
 
+            // Function to create two-page print layout (front + back)
+            function createTwoPagePrintLayout() {
+                // Create a new window for printing
+                const printWindow = window.open('', '_blank');
+                
+                // Get the zine content
+                const zineContent = zine.outerHTML;
+                
+                // Create HTML for both pages
+                const printHTML = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Zine Print Layout</title>
+                        <style>
+                            * { margin: 0; padding: 0; box-sizing: border-box; }
+                            
+                            @page {
+                                size: A4 landscape;
+                                margin: 0;
+                            }
+                            
+                            .print-page {
+                                width: 100vw;
+                                height: 100vh;
+                                page-break-after: always;
+                                position: relative;
+                            }
+                            
+                            .front-side {
+                                display: grid;
+                                grid-template-areas:
+                                    "page8 page1 page2 page7"
+                                    "page6 page3 page4 page5";
+                                width: 100%;
+                                height: 100%;
+                                gap: 0;
+                                padding: 0;
+                                margin: 0;
+                            }
+                            
+                            .back-side {
+                                background-image: url('${referenceImageUrl}');
+                                background-size: contain;
+                                background-repeat: no-repeat;
+                                background-position: center;
+                                transform: rotate(180deg);
+                            }
+                            
+                            .zine > * {
+                                width: 100%;
+                                height: 100%;
+                                border: none;
+                                box-shadow: none;
+                                display: grid;
+                                grid-template-columns: repeat(15, 1fr);
+                                grid-template-rows: repeat(21, 1fr);
+                                background-color: white;
+                                overflow: hidden;
+                                position: relative;
+                            }
+                            
+                            .zine > *:nth-child(1) { grid-area: page1; }
+                            .zine > *:nth-child(2) { grid-area: page2; }
+                            .zine > *:nth-child(3) { grid-area: page3; }
+                            .zine > *:nth-child(4) { grid-area: page4; }
+                            .zine > *:nth-child(5) { grid-area: page5; }
+                            .zine > *:nth-child(6) { grid-area: page6; }
+                            .zine > *:nth-child(7) { grid-area: page7; }
+                            .zine > *:nth-child(8) { grid-area: page8; }
+                            
+                            .zine > *:nth-child(8), 
+                            .zine > *:nth-child(1), 
+                            .zine > *:nth-child(2), 
+                            .zine > *:nth-child(7) {
+                                transform: rotate(180deg);
+                            }
+                            
+                            .page-content {
+                                grid-column: 1 / -1;
+                                grid-row: 1 / -1;
+                                position: relative;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                overflow: hidden;
+                            }
+                            
+                            .page-content img {
+                                width: 100%;
+                                height: 100%;
+                                object-fit: contain;
+                            }
+                            
+                            .page-number {
+                                display: none;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="print-page front-side">
+                            ${zineContent}
+                        </div>
+                        <div class="print-page back-side">
+                        </div>
+                    </body>
+                    </html>
+                `;
+                
+                printWindow.document.write(printHTML);
+                printWindow.document.close();
+                printWindow.focus();
+                printWindow.print();
+                printWindow.close();
+            }
+
             // Print button handler
             printBtn.addEventListener('click', () => {
                 const hasContent = Array.from(document.querySelectorAll('.page-content img')).some(img => img.src && img.src !== '');
@@ -570,7 +674,8 @@
                     return;
                 }
                 
-                window.print();
+                // Create print layout with both front and back
+                createTwoPagePrintLayout();
             });
 
             // PDF Export function
@@ -670,32 +775,57 @@
                         format: 'a4'
                     });
                     
-                    // Add the canvas image to PDF
+                    // Add the front side (zine) to PDF
                     const imgData = canvas.toDataURL('image/png', 1.0);
                     pdf.addImage(imgData, 'PNG', 0, 0, 297, 210); // A4 landscape dimensions
                     
-                    // Generate filename with timestamp
-                    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-                    const filename = `zine-export-${timestamp}.pdf`;
+                    // Add new page for back side
+                    pdf.addPage();
                     
-                    // Download the PDF
-                    pdf.save(filename);
+                    // Create back side with reference image
+                    const backSideCanvas = document.createElement('canvas');
+                    const backSideContext = backSideCanvas.getContext('2d');
+                    backSideCanvas.width = 210 * 4; // A4 width in pixels at 2x scale
+                    backSideCanvas.height = 297 * 4; // A4 height in pixels at 2x scale
                     
-                    // Reset button state
-                    exportPdfBtn.disabled = false;
-                    exportPdfBtn.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        Export PDF
-                    `;
-                    
-                    // Show success message
-                    uploadStatus.textContent = `PDF exported successfully as ${filename}`;
-                    uploadStatus.classList.remove('text-red-500', 'text-green-600', 'font-bold');
-                    uploadStatus.classList.add('text-green-600', 'font-bold');
+                    // Load and draw reference image
+                    const referenceImg = new Image();
+                    referenceImg.crossOrigin = 'anonymous';
+                    referenceImg.onload = function() {
+                        backSideContext.save();
+                        backSideContext.translate(backSideCanvas.width / 2, backSideCanvas.height / 2);
+                        backSideContext.rotate(Math.PI); // 180 degrees
+                        backSideContext.drawImage(referenceImg, -backSideCanvas.width / 2, -backSideCanvas.height / 2, backSideCanvas.width, backSideCanvas.height);
+                        backSideContext.restore();
+                        
+                        // Add back side to PDF
+                        const backSideData = backSideCanvas.toDataURL('image/png', 1.0);
+                        pdf.addImage(backSideData, 'PNG', 0, 0, 297, 210);
+                        
+                        // Generate filename with timestamp
+                        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                        const filename = `zine-export-${timestamp}.pdf`;
+                        
+                        // Download the PDF
+                        pdf.save(filename);
+                        
+                        // Reset button state
+                        exportPdfBtn.disabled = false;
+                        exportPdfBtn.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Export PDF
+                        `;
+                        
+                        // Show success message
+                        uploadStatus.textContent = `PDF exported successfully as ${filename}`;
+                        uploadStatus.classList.remove('text-red-500', 'text-green-600', 'font-bold');
+                        uploadStatus.classList.add('text-green-600', 'font-bold');
+                    };
+                    referenceImg.src = referenceImageUrl;
                     
                 } catch (error) {
                     console.error('Error exporting PDF:', error);
