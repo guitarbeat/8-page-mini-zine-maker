@@ -1,7 +1,19 @@
-// Set worker source for pdf.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js`;
+// Set worker source for pdf.js (guard if available)
+if (window.pdfjsLib && pdfjsLib.GlobalWorkerOptions) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js`;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Basic library guards
+    if (!window.pdfjsLib) {
+        console.error('pdfjsLib is not available.');
+    }
+    if (!window.jspdf) {
+        console.error('jsPDF is not available.');
+    }
+    if (!window.html2canvas) {
+        console.error('html2canvas is not available.');
+    }
     const zine = document.querySelector('.zine');
     const printBtn = document.getElementById('printBtn');
     const exportPdfBtn = document.getElementById('exportPdfBtn');
@@ -154,6 +166,17 @@ document.addEventListener('DOMContentLoaded', () => {
         printWindow.close();
     }
 
+    // Helper to create a blank white data URL (fallback size if unknown)
+    function createBlankDataUrl(width = 1000, height = 1400) {
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+        return canvas.toDataURL('image/png', 1.0);
+    }
+
     // PDF upload handler with improved image conversion
     pdfUpload.addEventListener('change', async (event) => {
         const file = event.target.files[0];
@@ -170,69 +193,93 @@ document.addEventListener('DOMContentLoaded', () => {
         fileReader.onload = async function() {
             const typedarray = new Uint8Array(this.result);
             try {
+                if (!window.pdfjsLib) {
+                    throw new Error('PDF engine not loaded');
+                }
                 const pdf = await pdfjsLib.getDocument(typedarray).promise;
                 const numPages = pdf.numPages;
                 uploadStatus.textContent = `PDF has ${numPages} pages. Converting to images...`;
 
                 const maxPages = Math.min(8, numPages);
+                let fallbackWidth = 1000;
+                let fallbackHeight = 1400;
 
                 // Process pages sequentially to avoid memory issues
                 for (let i = 1; i <= maxPages; i++) {
-                    const page = await pdf.getPage(i);
+                    try {
+                        const page = await pdf.getPage(i);
 
-                    // Use higher scale for better quality and HiDPI support
-                    const scale = 2.5;
-                    const viewport = page.getViewport({ scale: scale });
+                        // Use higher scale for better quality and HiDPI support
+                        const scale = 2.5;
+                        const viewport = page.getViewport({ scale: scale });
+                        fallbackWidth = Math.floor(viewport.width);
+                        fallbackHeight = Math.floor(viewport.height);
 
-                    // Support HiDPI screens
-                    const outputScale = window.devicePixelRatio || 1;
+                        // Support HiDPI screens
+                        const outputScale = window.devicePixelRatio || 1;
 
-                    // Create canvas with proper dimensions
-                    const canvas = document.createElement('canvas');
-                    const context = canvas.getContext('2d');
+                        // Create canvas with proper dimensions
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
 
-                    // Set canvas dimensions for HiDPI
-                    canvas.width = Math.floor(viewport.width * outputScale);
-                    canvas.height = Math.floor(viewport.height * outputScale);
-                    canvas.style.width = Math.floor(viewport.width) + "px";
-                    canvas.style.height = Math.floor(viewport.height) + "px";
+                        // Set canvas dimensions for HiDPI
+                        canvas.width = Math.floor(viewport.width * outputScale);
+                        canvas.height = Math.floor(viewport.height * outputScale);
+                        canvas.style.width = Math.floor(viewport.width) + "px";
+                        canvas.style.height = Math.floor(viewport.height) + "px";
 
-                    // Set up transform for HiDPI
-                    const transform = outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null;
+                        // Set up transform for HiDPI
+                        const transform = outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null;
 
-                    // Render page to canvas with proper context
-                    const renderContext = {
-                        canvasContext: context,
-                        transform: transform,
-                        viewport: viewport
-                    };
+                        // Render page to canvas with proper context
+                        const renderContext = {
+                            canvasContext: context,
+                            transform: transform,
+                            viewport: viewport
+                        };
 
-                    await page.render(renderContext).promise;
+                        await page.render(renderContext).promise;
 
-                    // Convert to PNG data URL with high quality
-                    const imgPreview = document.getElementById(`preview-${i}`);
-                    imgPreview.src = canvas.toDataURL('image/png', 1.0);
+                        // Convert to PNG data URL with high quality
+                        const imgPreview = document.getElementById(`preview-${i}`);
+                        if (imgPreview) {
+                            imgPreview.src = canvas.toDataURL('image/png', 1.0);
+                        }
 
-                    // Hide placeholder
-                    const placeholder = document.querySelector(`#content-${i} .placeholder`);
-                    placeholder.style.display = 'none';
+                        // Hide placeholder
+                        const placeholder = document.querySelector(`#content-${i} .placeholder`);
+                        if (placeholder) placeholder.style.display = 'none';
 
-                    // Update status
-                    uploadStatus.textContent = `Converting page ${i} of ${maxPages}...`;
+                        // Update status
+                        uploadStatus.textContent = `Converting page ${i} of ${maxPages}...`;
+                    } catch (pageErr) {
+                        console.warn(`Failed to render page ${i}:`, pageErr);
+                        const imgPreview = document.getElementById(`preview-${i}`);
+                        if (imgPreview) {
+                            imgPreview.src = createBlankDataUrl(fallbackWidth, fallbackHeight);
+                        }
+                        const placeholder = document.querySelector(`#content-${i} .placeholder`);
+                        if (placeholder) placeholder.style.display = 'none';
+                    }
                 }
 
                 // Clear any remaining placeholders if PDF has fewer than 8 pages
                 for (let i = maxPages + 1; i <= 8; i++) {
                     const imgPreview = document.getElementById(`preview-${i}`);
-                    imgPreview.src = '';
+                    if (imgPreview) {
+                        imgPreview.src = createBlankDataUrl(fallbackWidth, fallbackHeight);
+                    }
                     const placeholder = document.querySelector(`#content-${i} .placeholder`);
-                    placeholder.style.display = 'flex';
+                    if (placeholder) placeholder.style.display = 'none';
                 }
 
                 // Reference image will be added to back side during print/export
 
                 uploadText.textContent = 'Upload New PDF';
-                uploadStatus.textContent = `Successfully converted ${maxPages} pages to images. Ready to print!`;
+                const blanksAdded = 8 - maxPages;
+                uploadStatus.textContent = blanksAdded > 0
+                    ? `Converted ${maxPages} page(s). Filled ${blanksAdded} blank page(s). Ready to print!`
+                    : `Successfully converted ${maxPages} pages to images. Ready to print!`;
                 uploadStatus.classList.add('text-green-600', 'font-bold');
 
             } catch (error) {
