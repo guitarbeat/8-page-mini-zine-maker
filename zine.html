@@ -183,8 +183,6 @@
                 display: none;
             }
         }
-
-
     </style>
 </head>
 <body>
@@ -208,7 +206,6 @@
             <input type="file" id="pdf-upload" class="hidden" accept="application/pdf">
             <p id="upload-status" class="text-center text-sm text-gray-500 mt-3"></p>
         </div>
-
 
         <!-- Print Buttons -->
         <div class="no-print text-center mb-8">
@@ -249,7 +246,6 @@
             const pdfUpload = document.getElementById('pdf-upload');
             const uploadText = document.getElementById('upload-text');
             const uploadStatus = document.getElementById('upload-status');
-            
 
             // Generate the 8 blank page placeholders
             for (let i = 1; i <= 8; i++) {
@@ -509,9 +505,6 @@
                     `;
                 }
             });
-
-
-
         });
     </script>
 </body>
