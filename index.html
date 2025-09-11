@@ -69,6 +69,91 @@
             height: 100%;
             object-fit: contain;
             transform: scale(1);
+            transition: transform 0.3s ease;
+        }
+
+        /* Scaling system */
+        .zine.scaled {
+            transform-origin: center;
+            transition: transform 0.3s ease;
+        }
+
+        .page-content.scaled {
+            transform-origin: center;
+            transition: transform 0.3s ease;
+        }
+
+        .page-content img.scaled {
+            transform-origin: center;
+            transition: transform 0.3s ease;
+        }
+
+        /* Margin system */
+        .zine.margin-adjusted {
+            transition: padding 0.3s ease;
+        }
+
+        .zine > *.margin-adjusted {
+            transition: margin 0.3s ease;
+        }
+
+        /* Slider styling */
+        .slider {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .slider::-webkit-slider-track {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #3b82f6;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            background: #2563eb;
+            transform: scale(1.1);
+        }
+
+        .slider::-moz-range-track {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+            border: none;
+        }
+
+        .slider::-moz-range-thumb {
+            background: #3b82f6;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .slider::-moz-range-thumb:hover {
+            background: #2563eb;
+            transform: scale(1.1);
+        }
+
+        /* Preset button active state */
+        .scale-preset.active,
+        .margin-preset.active {
+            background: #3b82f6 !important;
+            color: white !important;
         }
 
         .page-number {
@@ -177,6 +262,28 @@
                 box-shadow: none;
             }
 
+            /* Preserve scaling in print mode */
+            .zine.scaled {
+                transform-origin: center !important;
+            }
+
+            .page-content.scaled {
+                transform-origin: center !important;
+            }
+
+            .page-content img.scaled {
+                transform-origin: center !important;
+            }
+
+            /* Preserve margin adjustments in print mode */
+            .zine.margin-adjusted {
+                padding: inherit !important;
+            }
+
+            .zine > *.margin-adjusted {
+                margin: inherit !important;
+            }
+
             .page-number {
                 display: none;
             }
@@ -207,6 +314,72 @@
             <p id="upload-status" class="text-center text-sm text-gray-500 mt-3"></p>
         </div>
 
+
+        <!-- Scaling Controls -->
+        <div class="no-print bg-white p-6 rounded-lg shadow-md max-w-4xl mx-auto mb-8">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 text-center">Page Scaling & Layout Controls</h3>
+            
+            <!-- Scale Controls -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label for="scale-slider" class="block text-sm font-medium text-gray-700 mb-2">
+                        Page Scale: <span id="scale-value">100%</span>
+                    </label>
+                    <input type="range" id="scale-slider" min="50" max="200" value="100" 
+                           class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>50%</span>
+                        <span>100%</span>
+                        <span>200%</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="margin-slider" class="block text-sm font-medium text-gray-700 mb-2">
+                        Page Margins: <span id="margin-value">Normal</span>
+                    </label>
+                    <input type="range" id="margin-slider" min="0" max="100" value="50" 
+                           class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>No Margins</span>
+                        <span>Normal</span>
+                        <span>Large</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Scale Presets -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Quick Scale Presets:</label>
+                <div class="flex flex-wrap gap-2 justify-center">
+                    <button class="scale-preset px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-md text-sm transition" data-scale="75">75%</button>
+                    <button class="scale-preset px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-md text-sm transition" data-scale="100">100%</button>
+                    <button class="scale-preset px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-md text-sm transition" data-scale="125">125%</button>
+                    <button class="scale-preset px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-md text-sm transition" data-scale="150">150%</button>
+                    <button class="scale-preset px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-md text-sm transition" data-scale="175">175%</button>
+                    <button class="scale-preset px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-md text-sm transition" data-scale="200">200%</button>
+                </div>
+            </div>
+            
+            <!-- Margin Presets -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Margin Presets:</label>
+                <div class="flex flex-wrap gap-2 justify-center">
+                    <button class="margin-preset px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-md text-sm transition" data-margin="0">No Margins</button>
+                    <button class="margin-preset px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-md text-sm transition" data-margin="25">Small</button>
+                    <button class="margin-preset px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-md text-sm transition" data-margin="50">Normal</button>
+                    <button class="margin-preset px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-md text-sm transition" data-margin="75">Large</button>
+                    <button class="margin-preset px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-md text-sm transition" data-margin="100">Extra Large</button>
+                </div>
+            </div>
+            
+            <!-- Reset Button -->
+            <div class="text-center">
+                <button id="reset-scaling" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md text-sm transition">
+                    Reset to Default
+                </button>
+            </div>
+        </div>
 
         <!-- Print Buttons -->
         <div class="no-print text-center mb-8">
@@ -239,6 +412,87 @@
             const uploadText = document.getElementById('upload-text');
             const uploadStatus = document.getElementById('upload-status');
             
+            // Scaling controls
+            const scaleSlider = document.getElementById('scale-slider');
+            const scaleValue = document.getElementById('scale-value');
+            const marginSlider = document.getElementById('margin-slider');
+            const marginValue = document.getElementById('margin-value');
+            const scalePresets = document.querySelectorAll('.scale-preset');
+            const marginPresets = document.querySelectorAll('.margin-preset');
+            const resetScaling = document.getElementById('reset-scaling');
+            
+            // Current scaling state
+            let currentScale = 100;
+            let currentMargin = 50;
+            
+            // Scaling functions
+            function updateScale(scale) {
+                currentScale = scale;
+                scaleValue.textContent = scale + '%';
+                scaleSlider.value = scale;
+                
+                // Update zine container scale
+                zine.classList.add('scaled');
+                zine.style.transform = `scale(${scale / 100})`;
+                
+                // Update individual page content scale
+                const pageContents = document.querySelectorAll('.page-content');
+                pageContents.forEach(content => {
+                    content.classList.add('scaled');
+                    content.style.transform = `scale(${scale / 100})`;
+                });
+                
+                // Update images scale
+                const images = document.querySelectorAll('.page-content img');
+                images.forEach(img => {
+                    img.classList.add('scaled');
+                    img.style.transform = `scale(${scale / 100})`;
+                });
+                
+                // Update active preset
+                scalePresets.forEach(preset => {
+                    preset.classList.remove('active');
+                    if (parseInt(preset.dataset.scale) === scale) {
+                        preset.classList.add('active');
+                    }
+                });
+            }
+            
+            function updateMargin(margin) {
+                currentMargin = margin;
+                const marginText = margin === 0 ? 'No Margins' : 
+                                 margin === 25 ? 'Small' :
+                                 margin === 50 ? 'Normal' :
+                                 margin === 75 ? 'Large' : 'Extra Large';
+                marginValue.textContent = marginText;
+                marginSlider.value = margin;
+                
+                // Update zine container padding
+                zine.classList.add('margin-adjusted');
+                const paddingValue = (margin / 100) * 2; // Convert to rem
+                zine.style.padding = `${paddingValue}rem`;
+                
+                // Update individual page margins
+                const pages = document.querySelectorAll('.zine > *');
+                pages.forEach(page => {
+                    page.classList.add('margin-adjusted');
+                    const marginValue = (margin / 100) * 0.5; // Convert to rem
+                    page.style.margin = `${marginValue}rem`;
+                });
+                
+                // Update active preset
+                marginPresets.forEach(preset => {
+                    preset.classList.remove('active');
+                    if (parseInt(preset.dataset.margin) === margin) {
+                        preset.classList.add('active');
+                    }
+                });
+            }
+            
+            function resetToDefault() {
+                updateScale(100);
+                updateMargin(50);
+            }
 
             // Generate the 8 blank page placeholders
             for (let i = 1; i <= 8; i++) {
@@ -374,7 +628,37 @@
                 window.print();
             });
 
-
+            // Scaling control event listeners
+            scaleSlider.addEventListener('input', (e) => {
+                updateScale(parseInt(e.target.value));
+            });
+            
+            marginSlider.addEventListener('input', (e) => {
+                updateMargin(parseInt(e.target.value));
+            });
+            
+            // Scale preset buttons
+            scalePresets.forEach(preset => {
+                preset.addEventListener('click', () => {
+                    updateScale(parseInt(preset.dataset.scale));
+                });
+            });
+            
+            // Margin preset buttons
+            marginPresets.forEach(preset => {
+                preset.addEventListener('click', () => {
+                    updateMargin(parseInt(preset.dataset.margin));
+                });
+            });
+            
+            // Reset button
+            resetScaling.addEventListener('click', () => {
+                resetToDefault();
+            });
+            
+            // Initialize with default values
+            updateScale(100);
+            updateMargin(50);
 
         });
     </script>
