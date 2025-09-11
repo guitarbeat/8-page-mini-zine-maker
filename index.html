@@ -294,6 +294,21 @@
             <p id="upload-status" class="text-center text-sm text-gray-500 mt-3"></p>
         </div>
 
+        <!-- PNG Upload Section for Page 2 -->
+        <div class="no-print bg-white p-6 rounded-lg shadow-md max-w-lg mx-auto mb-8">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 text-center">Page 2 Image (Back Cover)</h3>
+            <label for="png-upload" class="w-full text-center cursor-pointer bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-md shadow-lg transition transform hover:scale-105 flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <span id="png-upload-text">Upload PNG for Page 2</span>
+            </label>
+            <input type="file" id="png-upload" class="hidden" accept="image/png">
+            <p id="png-upload-status" class="text-center text-sm text-gray-500 mt-3"></p>
+        </div>
+
 
         <!-- Scaling Controls -->
         <div class="no-print bg-white p-6 rounded-lg shadow-md max-w-lg mx-auto mb-8">
@@ -352,6 +367,11 @@
             const pdfUpload = document.getElementById('pdf-upload');
             const uploadText = document.getElementById('upload-text');
             const uploadStatus = document.getElementById('upload-status');
+            
+            // PNG upload elements
+            const pngUpload = document.getElementById('png-upload');
+            const pngUploadText = document.getElementById('png-upload-text');
+            const pngUploadStatus = document.getElementById('png-upload-status');
             
             // Scaling controls
             const scaleSlider = document.getElementById('scale-slider');
@@ -419,6 +439,43 @@
                 zine.appendChild(page);
             }
 
+            // PNG upload handler for page 2
+            pngUpload.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file || !file.type.startsWith('image/')) {
+                    pngUploadStatus.textContent = 'Please select a PNG image file.';
+                    pngUploadStatus.classList.add('text-red-500', 'font-bold');
+                    return;
+                }
+
+                pngUploadText.textContent = 'Processing...';
+                pngUploadStatus.classList.remove('text-red-500', 'font-bold');
+                pngUploadStatus.textContent = `Processing "${file.name}"...`;
+
+                const fileReader = new FileReader();
+                fileReader.onload = function() {
+                    // Always place PNG on page 2
+                    const imgPreview = document.getElementById('preview-2');
+                    imgPreview.src = this.result;
+                    
+                    // Hide placeholder for page 2
+                    const placeholder = document.querySelector('#content-2 .placeholder');
+                    placeholder.style.display = 'none';
+                    
+                    pngUploadText.textContent = 'Upload New PNG';
+                    pngUploadStatus.textContent = `Successfully loaded image for page 2!`;
+                    pngUploadStatus.classList.add('text-green-600', 'font-bold');
+                };
+                
+                fileReader.onerror = function() {
+                    pngUploadStatus.classList.add('text-red-500', 'font-bold');
+                    pngUploadStatus.textContent = 'Error: Could not read the image file.';
+                    pngUploadText.textContent = 'Try a Different PNG';
+                };
+                
+                fileReader.readAsDataURL(file);
+            });
+
             // PDF upload handler with improved image conversion
             pdfUpload.addEventListener('change', async (event) => {
                 const file = event.target.files[0];
@@ -442,9 +499,6 @@
                         const maxPages = Math.min(8, numPages);
 
                         // Process pages sequentially to avoid memory issues
-                        // Map PDF pages to zine positions: PDF page 1 -> Zine page 2, PDF page 2 -> Zine page 1, etc.
-                        const pageMapping = [2, 1, 4, 3, 5, 6, 7, 8]; // PDF page index -> Zine page position
-                        
                         for (let i = 1; i <= maxPages; i++) {
                             const page = await pdf.getPage(i);
                             
@@ -478,13 +532,11 @@
                             await page.render(renderContext).promise;
                             
                             // Convert to PNG data URL with high quality
-                            // Map PDF page to zine position (PDF page 1 goes to zine page 2)
-                            const zinePageNumber = pageMapping[i - 1];
-                            const imgPreview = document.getElementById(`preview-${zinePageNumber}`);
+                            const imgPreview = document.getElementById(`preview-${i}`);
                             imgPreview.src = canvas.toDataURL('image/png', 1.0);
                             
                             // Hide placeholder
-                            const placeholder = document.querySelector(`#content-${zinePageNumber} .placeholder`);
+                            const placeholder = document.querySelector(`#content-${i} .placeholder`);
                             placeholder.style.display = 'none';
                             
                             // Update status
@@ -493,10 +545,9 @@
                         
                         // Clear any remaining placeholders if PDF has fewer than 8 pages
                         for (let i = maxPages + 1; i <= 8; i++) {
-                            const zinePageNumber = pageMapping[i - 1];
-                            const imgPreview = document.getElementById(`preview-${zinePageNumber}`);
+                            const imgPreview = document.getElementById(`preview-${i}`);
                             imgPreview.src = '';
-                            const placeholder = document.querySelector(`#content-${zinePageNumber} .placeholder`);
+                            const placeholder = document.querySelector(`#content-${i} .placeholder`);
                             placeholder.style.display = 'flex';
                         }
                         
