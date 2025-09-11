@@ -9,13 +9,16 @@ A web application that converts PDF files into printable 8-page mini zines with 
 - **Correct Layout**: Proper 8-page mini zine arrangement for printing
 - **Live Preview**: See exactly how your zine will look before printing
 - **Print Ready**: Optimized for A4 landscape printing
+- **PDF Export**: Download the assembled zine layout as a PDF file
 - **Folding Guide**: Visual cut line shows where to fold and cut
 
 ## How to Use
 
 1. **Upload PDF**: Click "Choose PDF File" and select your PDF
 2. **Preview**: See your zine layout with pages arranged correctly
-3. **Print**: Click "Print Zine" to print on A4 landscape paper
+3. **Print or Export**: 
+   - Click "Print Zine" to print on A4 landscape paper
+   - Click "Export PDF" to download the zine layout as a PDF file
 4. **Fold & Cut**: Follow the dashed line to fold and cut your zine
 
 ## 8-Page Mini Zine Layout
@@ -43,6 +46,8 @@ Page 5 | Page 6 | Page 7 | Page 8
 ## Technical Details
 
 - **PDF.js**: For high-quality PDF rendering
+- **jsPDF**: For PDF generation and export
+- **html2canvas**: For capturing the zine layout as an image
 - **Tailwind CSS**: For responsive design
 - **CSS Grid**: For precise page layout
 - **HiDPI Support**: Optimized for high-resolution displays
