@@ -22,8 +22,8 @@
         .zine {
             display: grid;
             grid-template-areas:
-                "page4 page3 page2 page1"
-                "page5 page6 page7 page8";
+                "page8 page1 page2 page7"
+                "page6 page3 page4 page5";
             grid-template-columns: repeat(4, 1fr);
             grid-template-rows: repeat(2, 1fr);
             gap: 1rem;
@@ -193,8 +193,8 @@
             .zine {
                 display: grid;
                 grid-template-areas:
-                    "page4 page3 page2 page1"
-                    "page5 page6 page7 page8";
+                    "page8 page1 page2 page7"
+                    "page6 page3 page4 page5";
                 width: 100%;
                 height: 100%;
                 gap: 0;
@@ -234,10 +234,11 @@
             .zine > *:nth-child(8) { grid-area: page8; }
 
             /* Rotate pages that need to be upside down for proper folding */
+            /* In the correct layout: page8, page1, page2, page7 are on top row and need rotation */
+            .zine > *:nth-child(8), 
             .zine > *:nth-child(1), 
             .zine > *:nth-child(2), 
-            .zine > *:nth-child(3), 
-            .zine > *:nth-child(4) {
+            .zine > *:nth-child(7) {
                 transform: rotate(180deg);
             }
 
@@ -281,7 +282,14 @@
         <!-- Reference Layout Info -->
         <div class="no-print bg-white p-6 rounded-lg shadow-md max-w-lg mx-auto mb-8">
             <h3 class="text-lg font-semibold text-gray-800 mb-4 text-center">Zine Layout Reference</h3>
-            <p class="text-sm text-gray-600 text-center mb-4">Using the standard 8-page zine layout with reference image on page 2</p>
+            <p class="text-sm text-gray-600 text-center mb-4">Using the correct 8-page zine layout matching Tahoe Trail Guide reference</p>
+            <div class="text-center mb-4">
+                <div class="text-xs text-gray-500 mb-2">Page Layout (when printed):</div>
+                <div class="text-xs font-mono bg-gray-100 p-2 rounded">
+                    Page 8 | Page 1 | Page 2 | Page 7<br>
+                    Page 6 | Page 3 | Page 4 | Page 5
+                </div>
+            </div>
             <div class="text-center">
                 <button id="load-reference-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition transform hover:scale-105">
                     Load Reference Layout

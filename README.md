@@ -26,12 +26,12 @@ A web application that converts PDF files into printable 8-page mini zines with 
 The zine uses the standard 8-page mini zine layout:
 
 ```
-Page 4 | Page 3 | Page 2 | Page 1
-Page 5 | Page 6 | Page 7 | Page 8
+Page 8 | Page 1 | Page 2 | Page 7
+Page 6 | Page 3 | Page 4 | Page 5
 ```
 
-- **Top Row**: Pages 4, 3, 2, 1 (rotated 180° for proper folding)
-- **Bottom Row**: Pages 5, 6, 7, 8 (normal orientation)
+- **Top Row**: Pages 8, 1, 2, 7 (rotated 180° for proper folding)
+- **Bottom Row**: Pages 6, 3, 4, 5 (normal orientation)
 - **Cut Line**: Dashed line in the middle shows where to cut
 
 ## Folding Instructions
