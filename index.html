@@ -6,6 +6,8 @@
     <title>PDF to Zine Maker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         /* Based on zserge/zine CSS structure */
@@ -311,7 +313,7 @@
             </div>
         </div>
 
-        <!-- Print Buttons -->
+        <!-- Print and Export Buttons -->
         <div class="no-print text-center mb-8">
             <div class="flex gap-4 justify-center">
                 <button id="printBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:scale-105 flex items-center justify-center gap-2">
@@ -321,6 +323,14 @@
                         <rect x="6" y="14" width="12" height="8"></rect>
                     </svg>
                     Print Zine
+                </button>
+                <button id="exportPdfBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:scale-105 flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Export PDF
                 </button>
             </div>
         </div>
@@ -338,6 +348,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const zine = document.querySelector('.zine');
             const printBtn = document.getElementById('printBtn');
+            const exportPdfBtn = document.getElementById('exportPdfBtn');
             const pdfUpload = document.getElementById('pdf-upload');
             const uploadText = document.getElementById('upload-text');
             const uploadStatus = document.getElementById('upload-status');
@@ -508,6 +519,151 @@
                 
                 window.print();
             });
+
+            // PDF Export function
+            async function exportZineAsPDF() {
+                const hasContent = Array.from(document.querySelectorAll('.page-content img')).some(img => img.src && img.src !== '');
+                
+                if (!hasContent) {
+                    alert('Please upload a PDF first before exporting.');
+                    return;
+                }
+
+                try {
+                    // Show loading state
+                    exportPdfBtn.disabled = true;
+                    exportPdfBtn.innerHTML = `
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Exporting...
+                    `;
+
+                    // Create a temporary container for the zine layout
+                    const tempContainer = document.createElement('div');
+                    tempContainer.style.position = 'absolute';
+                    tempContainer.style.left = '-9999px';
+                    tempContainer.style.top = '0';
+                    tempContainer.style.width = '210mm'; // A4 width
+                    tempContainer.style.height = '297mm'; // A4 height
+                    tempContainer.style.background = 'white';
+                    tempContainer.style.padding = '0';
+                    tempContainer.style.margin = '0';
+                    
+                    // Clone the zine with print styles applied
+                    const zineClone = zine.cloneNode(true);
+                    zineClone.style.display = 'grid';
+                    zineClone.style.gridTemplateAreas = '"page4 page3 page2 page1" "page5 page6 page7 page8"';
+                    zineClone.style.width = '100%';
+                    zineClone.style.height = '100%';
+                    zineClone.style.gap = '0';
+                    zineClone.style.padding = '0';
+                    zineClone.style.margin = '0';
+                    zineClone.style.position = 'fixed';
+                    zineClone.style.top = '0';
+                    zineClone.style.left = '0';
+                    
+                    // Apply print styles to cloned pages
+                    const pages = zineClone.querySelectorAll('article');
+                    pages.forEach((page, index) => {
+                        page.style.width = '100%';
+                        page.style.height = '100%';
+                        page.style.border = 'none';
+                        page.style.boxShadow = 'none';
+                        
+                        // Rotate top row pages for proper folding
+                        if (index < 4) {
+                            page.style.transform = 'rotate(180deg)';
+                        }
+                    });
+                    
+                    // Add cut line
+                    const cutLine = document.createElement('div');
+                    cutLine.style.position = 'absolute';
+                    cutLine.style.top = '50%';
+                    cutLine.style.left = '0';
+                    cutLine.style.right = '0';
+                    cutLine.style.height = '2px';
+                    cutLine.style.background = 'repeating-linear-gradient(to right, #000 0px, #000 10px, transparent 10px, transparent 20px)';
+                    cutLine.style.zIndex = '10';
+                    cutLine.style.pointerEvents = 'none';
+                    zineClone.appendChild(cutLine);
+                    
+                    tempContainer.appendChild(zineClone);
+                    document.body.appendChild(tempContainer);
+                    
+                    // Capture the zine as canvas
+                    const canvas = await html2canvas(zineClone, {
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: '#ffffff',
+                        width: 210 * 4, // A4 width in pixels at 2x scale
+                        height: 297 * 4  // A4 height in pixels at 2x scale
+                    });
+                    
+                    // Clean up temporary container
+                    document.body.removeChild(tempContainer);
+                    
+                    // Create PDF
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF({
+                        orientation: 'landscape',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+                    
+                    // Add the canvas image to PDF
+                    const imgData = canvas.toDataURL('image/png', 1.0);
+                    pdf.addImage(imgData, 'PNG', 0, 0, 297, 210); // A4 landscape dimensions
+                    
+                    // Generate filename with timestamp
+                    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                    const filename = `zine-export-${timestamp}.pdf`;
+                    
+                    // Download the PDF
+                    pdf.save(filename);
+                    
+                    // Reset button state
+                    exportPdfBtn.disabled = false;
+                    exportPdfBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Export PDF
+                    `;
+                    
+                    // Show success message
+                    uploadStatus.textContent = `PDF exported successfully as ${filename}`;
+                    uploadStatus.classList.remove('text-red-500', 'text-green-600', 'font-bold');
+                    uploadStatus.classList.add('text-green-600', 'font-bold');
+                    
+                } catch (error) {
+                    console.error('Error exporting PDF:', error);
+                    
+                    // Reset button state
+                    exportPdfBtn.disabled = false;
+                    exportPdfBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Export PDF
+                    `;
+                    
+                    // Show error message
+                    uploadStatus.textContent = `Error exporting PDF: ${error.message}`;
+                    uploadStatus.classList.remove('text-green-600', 'font-bold');
+                    uploadStatus.classList.add('text-red-500', 'font-bold');
+                }
+            }
+
+            // Export PDF button handler
+            exportPdfBtn.addEventListener('click', exportZineAsPDF);
 
             // Scaling control event listeners
             scaleSlider.addEventListener('input', (e) => {
