@@ -62,8 +62,8 @@
         .zine {
             display: grid;
             grid-template-areas:
-                "page8 page1 page2 page7"
-                "page6 page3 page4 page5";
+                "page5 page4 page3 page2"
+                "page6 page7 page8 page1";
             grid-template-columns: repeat(4, 1fr);
             grid-template-rows: repeat(2, 1fr);
             gap: 1rem;
@@ -275,8 +275,8 @@
             .zine {
                 display: grid;
                 grid-template-areas:
-                    "page8 page1 page2 page7"
-                    "page6 page3 page4 page5";
+                    "page5 page4 page3 page2"
+                    "page6 page7 page8 page1";
                 width: 100%;
                 height: 100%;
                 gap: 0;
@@ -316,11 +316,11 @@
             .zine > *:nth-child(8) { grid-area: page8; }
 
             /* Rotate pages that need to be upside down for proper folding */
-            /* In the correct layout: page8, page1, page2, page7 are on top row and need rotation */
-            .zine > *:nth-child(8), 
-            .zine > *:nth-child(1), 
-            .zine > *:nth-child(2), 
-            .zine > *:nth-child(7) {
+            /* In this layout: page5, page4, page3, page2 are on top row and need rotation */
+            .zine > *:nth-child(5), 
+            .zine > *:nth-child(4), 
+            .zine > *:nth-child(3), 
+            .zine > *:nth-child(2) {
                 transform: rotate(180deg);
             }
 
@@ -375,8 +375,8 @@
             <div class="text-center mb-4">
                 <div class="text-xs mb-2" style="color: var(--text-muted);">Page Layout (when printed):</div>
                 <div class="text-xs font-mono p-2 rounded" style="background-color: var(--bg-primary); color: var(--text-primary);">
-                    Page 8 | Page 1 | Page 2 | Page 7<br>
-                    Page 6 | Page 3 | Page 4 | Page 5
+                    Page 5 | Page 4 | Page 3 | Page 2<br>
+                    Page 6 | Page 7 | Page 8 | Page 1
                 </div>
             </div>
             <div class="text-center">
@@ -711,8 +711,8 @@
                             .front-side {
                                 display: grid;
                                 grid-template-areas:
-                                    "page8 page1 page2 page7"
-                                    "page6 page3 page4 page5";
+                                    "page5 page4 page3 page2"
+                                    "page6 page7 page8 page1";
                                 width: 100%;
                                 height: 100%;
                                 gap: 0;
@@ -733,8 +733,8 @@
                             .zine {
                                 display: grid;
                                 grid-template-areas:
-                                    "page8 page1 page2 page7"
-                                    "page6 page3 page4 page5";
+                                    "page5 page4 page3 page2"
+                                    "page6 page7 page8 page1";
                                 width: 100%;
                                 height: 100%;
                                 gap: 0;
@@ -766,8 +766,10 @@
                             
                             .zine > *:nth-child(8), 
                             .zine > *:nth-child(1), 
-                            .zine > *:nth-child(2), 
-                            .zine > *:nth-child(7) {
+                            .zine > *:nth-child(5), 
+                            .zine > *:nth-child(4),
+                            .zine > *:nth-child(3),
+                            .zine > *:nth-child(2) {
                                 transform: rotate(180deg);
                             }
                             
