@@ -607,6 +607,9 @@
                     tempContainer.appendChild(zineClone);
                     document.body.appendChild(tempContainer);
                     
+                    // Disable html2canvas logging to prevent error text overlay
+                    window.html2canvas.logging = false;
+                    
                     // Capture the zine as canvas
                     const canvas = await html2canvas(zineClone, {
                         scale: 2,
