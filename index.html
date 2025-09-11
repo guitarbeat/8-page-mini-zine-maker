@@ -307,9 +307,7 @@
                 </div>
             </div>
             <div class="text-center">
-                <button id="load-reference-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition transform hover:scale-105">
-                    Load Reference Layout
-                </button>
+                <p class="text-sm text-green-600 font-medium">✓ Reference image will be automatically included in print/export</p>
             </div>
         </div>
 
@@ -373,8 +371,8 @@
             const uploadText = document.getElementById('upload-text');
             const uploadStatus = document.getElementById('upload-status');
             
-            // Reference layout elements
-            const loadReferenceBtn = document.getElementById('load-reference-btn');
+            // Reference image URL
+            const referenceImageUrl = 'https://tahoetrailguide.com/wp-content/uploads/2018/05/8-Page_Zine_Page_Layout_1_Page_Numbers_Jared_Manninen_300ppi-1024x791.jpg';
             
             
             // Scaling controls
@@ -443,24 +441,18 @@
                 zine.appendChild(page);
             }
 
-            // Load reference layout image on page 2
-            loadReferenceBtn.addEventListener('click', () => {
-                const referenceImageUrl = 'https://tahoetrailguide.com/wp-content/uploads/2018/05/8-Page_Zine_Page_Layout_1_Page_Numbers_Jared_Manninen_300ppi-1024x791.jpg';
-                
-                // Load the reference image on page 2
+            // Function to load reference image on page 2
+            function loadReferenceImage() {
                 const imgPreview = document.getElementById('preview-2');
                 imgPreview.src = referenceImageUrl;
                 
                 // Hide placeholder for page 2
                 const placeholder = document.querySelector('#content-2 .placeholder');
                 placeholder.style.display = 'none';
-                
-                // Update button text
-                loadReferenceBtn.textContent = 'Reference Loaded ✓';
-                loadReferenceBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
-                loadReferenceBtn.classList.add('bg-gray-500', 'cursor-not-allowed');
-                loadReferenceBtn.disabled = true;
-            });
+            }
+            
+            // Load reference image automatically
+            loadReferenceImage();
 
 
             // PDF upload handler with improved image conversion
@@ -537,6 +529,9 @@
                             const placeholder = document.querySelector(`#content-${i} .placeholder`);
                             placeholder.style.display = 'flex';
                         }
+                        
+                        // Ensure reference image is loaded
+                        loadReferenceImage();
                         
                         uploadText.textContent = 'Upload New PDF';
                         uploadStatus.textContent = `Successfully converted ${maxPages} pages to images. Ready to print!`;
