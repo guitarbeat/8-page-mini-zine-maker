@@ -725,9 +725,9 @@
 
     <div class="w-full mx-auto p-4">
         <!-- Header -->
-        <div class="no-print text-center mb-8">
-            <h1 class="text-4xl font-bold mb-2" style="color: var(--text-primary);">PDF to Zine Maker</h1>
-            <p style="color: var(--text-secondary);">Create a foldable 8-page zine from a PDF file</p>
+        <div class="no-print text-center mb-8 fade-in-up">
+            <h1 class="text-5xl font-bold mb-4" style="color: var(--text-primary); background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">PDF to Zine Maker</h1>
+            <p class="text-xl" style="color: var(--text-secondary);">Create a beautiful foldable 8-page zine from any PDF file</p>
         </div>
 
         <!-- Upload Section -->
@@ -746,21 +746,40 @@
                 <input type="file" id="pdf-upload" class="hidden" accept="application/pdf" multiple="false">
             </div>
             <p id="upload-status" class="text-center text-sm mt-3" style="color: var(--text-muted);"></p>
+
+        <div class="no-print card max-w-4xl mx-auto mb-8 fade-in-up">
+            <div class="card-header">
+                <h3 class="card-title">Upload Your PDF</h3>
+                <p class="card-description">Select a PDF file to convert into a beautiful 8-page zine</p>
+            </div>
+            <label for="pdf-upload" class="btn-primary w-full text-center cursor-pointer flex items-center justify-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span id="upload-text">Upload PDF</span>
+            </label>
+            <input type="file" id="pdf-upload" class="hidden" accept="application/pdf">
+            <p id="upload-status" class="text-center text-sm mt-4" style="color: var(--text-muted);"></p>
+
         </div>
 
         <!-- Reference Layout Info -->
-        <div class="no-print p-6 rounded-lg shadow-md max-w-4xl mx-auto mb-8" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color);">
-            <h3 class="text-lg font-semibold mb-4 text-center" style="color: var(--text-primary);">Zine Layout Reference</h3>
-            <p class="text-sm text-center mb-4" style="color: var(--text-secondary);">Using the correct 8-page zine layout matching Tahoe Trail Guide reference</p>
+        <div class="no-print card max-w-4xl mx-auto mb-8 fade-in-up">
+            <div class="card-header">
+                <h3 class="card-title">Zine Layout Reference</h3>
+                <p class="card-description">Using the correct 8-page zine layout for proper folding</p>
+            </div>
             <div class="text-center mb-4">
-                <div class="text-xs mb-2" style="color: var(--text-muted);">Page Layout (when printed):</div>
-                <div class="text-xs font-mono p-2 rounded" style="background-color: var(--bg-primary); color: var(--text-primary);">
+                <div class="text-sm mb-3 font-medium" style="color: var(--text-muted);">Page Layout (when printed):</div>
+                <div class="text-sm font-mono p-4 rounded-lg" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); color: var(--text-primary); border: 1px solid var(--border-color);">
                     Page 5 | Page 4 | Page 3 | Page 2<br>
                     Page 6 | Page 7 | Page 8 | Page 1
                 </div>
             </div>
             <div class="text-center">
-                <p class="text-sm font-medium" style="color: #10b981;">✓ Reference image will be automatically included in print/export</p>
+                <p class="text-sm font-medium" style="color: var(--success-color);">✓ Reference image will be automatically included in print/export</p>
             </div>
         </div>
 
@@ -778,16 +797,19 @@
         </div>
 
         <!-- Scaling Controls -->
-        <div class="no-print p-6 rounded-lg shadow-md max-w-4xl mx-auto mb-8" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color);">
-            <h3 class="text-lg font-semibold mb-4 text-center" style="color: var(--text-primary);">Page Scale</h3>
+        <div class="no-print card max-w-4xl mx-auto mb-8 fade-in-up">
+            <div class="card-header">
+                <h3 class="card-title">Page Scale</h3>
+                <p class="card-description">Adjust the size of your zine pages for optimal printing</p>
+            </div>
             
             <div>
-                <label for="scale-slider" class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">
-                    Scale: <span id="scale-value">100%</span>
+                <label for="scale-slider" class="block text-sm font-medium mb-3" style="color: var(--text-secondary);">
+                    Scale: <span id="scale-value" class="font-bold" style="color: var(--accent-primary);">100%</span>
                 </label>
                 <input type="range" id="scale-slider" min="50" max="200" value="100" 
-                       class="w-full h-2 rounded-lg appearance-none cursor-pointer slider" style="background: var(--slider-track);">
-                <div class="flex justify-between text-xs mt-1" style="color: var(--text-muted);">
+                       class="w-full slider">
+                <div class="flex justify-between text-xs mt-2" style="color: var(--text-muted);">
                     <span>50%</span>
                     <span>100%</span>
                     <span>200%</span>
@@ -796,9 +818,9 @@
         </div>
 
         <!-- Print and Export Buttons -->
-        <div class="no-print text-center mb-8">
-            <div class="flex gap-4 justify-center">
-                <button id="printBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:scale-105 flex items-center justify-center gap-2">
+        <div class="no-print text-center mb-8 fade-in-up">
+            <div class="flex gap-4 justify-center flex-wrap">
+                <button id="printBtn" class="btn-success">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="6 9 6 2 18 2 18 9"></polyline>
                         <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
@@ -806,7 +828,7 @@
                     </svg>
                     Print Zine
                 </button>
-                <button id="exportPdfBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:scale-105 flex items-center justify-center gap-2">
+                <button id="exportPdfBtn" class="btn-primary">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
@@ -818,7 +840,7 @@
         </div>
 
         <!-- Zine Container -->
-        <div class="zine">
+        <div class="zine scale-in">
             <!-- Pages 1 to 8 will be generated by JavaScript -->
         </div>
     </div>
