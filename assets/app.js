@@ -88,6 +88,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Generate the 8 blank page placeholders
     for (let i = 1; i <= 8; i++) {
         const page = document.createElement('article');
+        page.className = 'fade-in-up';
+        page.style.animationDelay = `${i * 0.1}s`;
 
         const content = document.createElement('div');
         content.className = 'page-content';
@@ -244,11 +246,18 @@ document.addEventListener('DOMContentLoaded', () => {
                         const imgPreview = document.getElementById(`preview-${i}`);
                         if (imgPreview) {
                             imgPreview.src = canvas.toDataURL('image/png', 1.0);
+                            imgPreview.classList.add('scale-in');
                         }
 
-                        // Hide placeholder
+                        // Hide placeholder with animation
                         const placeholder = document.querySelector(`#content-${i} .placeholder`);
-                        if (placeholder) placeholder.style.display = 'none';
+                        if (placeholder) {
+                            placeholder.style.transition = 'opacity 0.3s ease';
+                            placeholder.style.opacity = '0';
+                            setTimeout(() => {
+                                placeholder.style.display = 'none';
+                            }, 300);
+                        }
 
                         // Update status
                         uploadStatus.textContent = `Converting page ${i} of ${maxPages}...`;
@@ -257,9 +266,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         const imgPreview = document.getElementById(`preview-${i}`);
                         if (imgPreview) {
                             imgPreview.src = createBlankDataUrl(fallbackWidth, fallbackHeight);
+                            imgPreview.classList.add('scale-in');
                         }
                         const placeholder = document.querySelector(`#content-${i} .placeholder`);
-                        if (placeholder) placeholder.style.display = 'none';
+                        if (placeholder) {
+                            placeholder.style.transition = 'opacity 0.3s ease';
+                            placeholder.style.opacity = '0';
+                            setTimeout(() => {
+                                placeholder.style.display = 'none';
+                            }, 300);
+                        }
                     }
                 }
 
@@ -268,9 +284,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     const imgPreview = document.getElementById(`preview-${i}`);
                     if (imgPreview) {
                         imgPreview.src = createBlankDataUrl(fallbackWidth, fallbackHeight);
+                        imgPreview.classList.add('scale-in');
                     }
                     const placeholder = document.querySelector(`#content-${i} .placeholder`);
-                    if (placeholder) placeholder.style.display = 'none';
+                    if (placeholder) {
+                        placeholder.style.transition = 'opacity 0.3s ease';
+                        placeholder.style.opacity = '0';
+                        setTimeout(() => {
+                            placeholder.style.display = 'none';
+                        }, 300);
+                    }
                 }
 
                 // Reference image will be added to back side during print/export
