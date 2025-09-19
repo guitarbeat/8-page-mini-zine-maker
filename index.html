@@ -31,6 +31,13 @@
             --slider-track: #e5e7eb;
             --slider-thumb: #3b82f6;
             --slider-thumb-hover: #2563eb;
+            /* Semantic color variables */
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
         }
 
         [data-theme="dark"] {
@@ -50,6 +57,13 @@
             --slider-track: #4b5563;
             --slider-thumb: #60a5fa;
             --slider-thumb-hover: #3b82f6;
+            /* Semantic color variables for dark theme */
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --success-color: #34d399;
+            --error-color: #f87171;
+            --warning-color: #fbbf24;
+            --info-color: #60a5fa;
         }
 
         body {
@@ -269,14 +283,14 @@
         }
 
         .upload-zone:hover {
-            border-color: var(--slider-thumb);
+            border-color: var(--accent-color);
             background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
             transform: translateY(-2px);
             box-shadow: 0 8px 25px var(--shadow-color);
         }
 
         .upload-zone.dragover {
-            border-color: var(--slider-thumb);
+            border-color: var(--accent-color);
             background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
             transform: scale(1.02);
             box-shadow: 0 12px 35px rgba(59, 130, 246, 0.3);
@@ -284,7 +298,7 @@
 
         .upload-zone.dragover .upload-icon {
             transform: scale(1.2) rotate(5deg);
-            color: var(--slider-thumb);
+            color: var(--accent-color);
         }
 
         .upload-content {
@@ -313,14 +327,14 @@
         }
 
         .upload-link {
-            color: var(--slider-thumb);
+            color: var(--accent-color);
             text-decoration: underline;
             cursor: pointer;
             transition: color 0.3s ease;
         }
 
         .upload-link:hover {
-            color: var(--slider-thumb-hover);
+            color: var(--accent-hover);
         }
 
         .upload-hint {
@@ -389,19 +403,19 @@
         }
 
         .toast.success {
-            border-left: 4px solid #10b981;
+            border-left: 4px solid var(--success-color);
         }
 
         .toast.error {
-            border-left: 4px solid #ef4444;
+            border-left: 4px solid var(--error-color);
         }
 
         .toast.warning {
-            border-left: 4px solid #f59e0b;
+            border-left: 4px solid var(--warning-color);
         }
 
         .toast.info {
-            border-left: 4px solid #3b82f6;
+            border-left: 4px solid var(--info-color);
         }
 
         .toast-icon {
@@ -448,7 +462,7 @@
             bottom: 0;
             left: 0;
             height: 3px;
-            background: var(--slider-thumb);
+            background: var(--accent-color);
             border-radius: 0 0 8px 8px;
             transition: width linear;
         }
@@ -469,7 +483,7 @@
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, var(--slider-thumb), #60a5fa);
+            background: linear-gradient(90deg, var(--accent-color), var(--accent-hover));
             border-radius: 4px;
             width: 0%;
             transition: width 0.3s ease;
@@ -718,7 +732,7 @@
 
         <!-- Upload Section -->
         <div class="no-print p-6 rounded-lg shadow-md max-w-4xl mx-auto mb-8" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color);">
-            <div id="upload-zone" class="upload-zone">
+            <div id="upload-zone" class="upload-zone" tabindex="0" role="button" aria-label="Upload PDF file">
                 <div class="upload-content">
                     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="upload-icon">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -729,7 +743,7 @@
                     <p class="upload-subtitle">or <span class="upload-link">browse files</span></p>
                     <p class="upload-hint">Supports PDF files up to 8 pages</p>
                 </div>
-                <input type="file" id="pdf-upload" class="hidden" accept="application/pdf">
+                <input type="file" id="pdf-upload" class="hidden" accept="application/pdf" multiple="false">
             </div>
             <p id="upload-status" class="text-center text-sm mt-3" style="color: var(--text-muted);"></p>
         </div>
@@ -832,7 +846,17 @@
             const referenceImageUrl = '/assets/reference-back-side.jpg';
             
             // Toast Notification System
+            const MAX_TOASTS = 3; // Maximum number of visible toasts
+            
             function showToast(type, title, message, duration = 5000) {
+                // Remove excess toasts if we have too many
+                const existingToasts = toastContainer.querySelectorAll('.toast');
+                if (existingToasts.length >= MAX_TOASTS) {
+                    const oldestToast = existingToasts[0];
+                    oldestToast.classList.remove('show');
+                    setTimeout(() => oldestToast.remove(), 300);
+                }
+                
                 const toast = document.createElement('div');
                 toast.className = `toast ${type}`;
                 
@@ -849,11 +873,18 @@
                         <div class="toast-title">${title}</div>
                         <div class="toast-message">${message}</div>
                     </div>
-                    <button class="toast-close" onclick="this.parentElement.remove()">
+                    <button class="toast-close">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </button>
                     <div class="toast-progress" style="width: 100%; animation-duration: ${duration}ms;"></div>
                 `;
+                
+                // Add event listener for close button
+                const closeBtn = toast.querySelector('.toast-close');
+                closeBtn.addEventListener('click', () => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                });
                 
                 toastContainer.appendChild(toast);
                 
@@ -868,10 +899,16 @@
             }
             
             // Progress Bar Functions
+            let progressStartTime = 0;
+            const MIN_PROGRESS_DISPLAY_TIME = 1500; // Minimum 1.5 seconds
+            const PROGRESS_INITIAL_PERCENT = 10; // Starting progress percentage
+            const PROGRESS_RANGE_PERCENT = 80; // Range for processing (10% to 90%)
+            
             function showProgress() {
                 progressContainer.style.display = 'block';
                 progressFill.style.width = '0%';
                 progressText.textContent = 'Starting...';
+                progressStartTime = Date.now();
             }
             
             function updateProgress(percent, text) {
@@ -880,13 +917,24 @@
             }
             
             function hideProgress() {
+                const elapsed = Date.now() - progressStartTime;
+                const remainingTime = Math.max(0, MIN_PROGRESS_DISPLAY_TIME - elapsed);
+                
                 setTimeout(() => {
                     progressContainer.style.display = 'none';
-                }, 500);
+                }, remainingTime + 500);
             }
             
             // Drag and Drop Functionality
             uploadZone.addEventListener('click', () => pdfUpload.click());
+            
+            // Keyboard accessibility
+            uploadZone.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    pdfUpload.click();
+                }
+            });
             
             uploadZone.addEventListener('dragover', (e) => {
                 e.preventDefault();
@@ -1167,7 +1215,7 @@
                         const pdf = await pdfjsLib.getDocument(typedarray).promise;
                         const numPages = pdf.numPages;
                         
-                        updateProgress(10, `PDF loaded with ${numPages} pages`);
+                        updateProgress(PROGRESS_INITIAL_PERCENT, `PDF loaded with ${numPages} pages`);
                         showToast('info', 'PDF Loaded', `Found ${numPages} pages. Starting conversion...`);
 
                         const maxPages = Math.min(8, numPages);
@@ -1214,7 +1262,7 @@
                             placeholder.style.display = 'none';
                             
                             // Update progress
-                            const progress = 10 + (i / maxPages) * 80;
+                            const progress = PROGRESS_INITIAL_PERCENT + (i / maxPages) * PROGRESS_RANGE_PERCENT;
                             updateProgress(progress, `Converting page ${i} of ${maxPages}...`);
                         }
                         
@@ -1238,6 +1286,9 @@
                         uploadStatus.textContent = message;
                         uploadStatus.classList.remove('text-red-500', 'text-green-600', 'font-bold');
                         uploadStatus.classList.add('text-green-600', 'font-bold');
+                        
+                        // Reset file input to allow re-uploading the same file
+                        pdfUpload.value = '';
 
                     } catch (error) {
                         console.error('Error processing PDF:', error);
@@ -1253,9 +1304,13 @@
 
             // PDF upload handler
             pdfUpload.addEventListener('change', (event) => {
-                const file = event.target.files[0];
-                if (file) {
-                    handleFileUpload(file);
+                const files = event.target.files;
+                if (files.length > 1) {
+                    showToast('warning', 'Multiple Files', 'Please select only one PDF file at a time.');
+                    return;
+                }
+                if (files.length === 1) {
+                    handleFileUpload(files[0]);
                 }
             });
 
@@ -1480,8 +1535,8 @@
                     exportPdfBtn.click();
                 }
                 
-                // Space: Toggle theme
-                if (e.key === ' ' && e.target === document.body) {
+                // Space: Toggle theme (only when no input is focused)
+                if (e.key === ' ' && e.target === document.body && !e.target.matches('input, textarea, [contenteditable]')) {
                     e.preventDefault();
                     toggleTheme();
                 }
@@ -1493,8 +1548,11 @@
                 }
             });
 
-            // Show keyboard shortcuts help
-            showToast('info', 'Keyboard Shortcuts', 'Ctrl+O: Open PDF | Ctrl+P: Print | Ctrl+S: Export | Space: Toggle theme', 8000);
+            // Show keyboard shortcuts help only on first visit
+            if (!localStorage.getItem('zine-maker-visited')) {
+                showToast('info', 'Keyboard Shortcuts', 'Ctrl+O: Open PDF | Ctrl+P: Print | Ctrl+S: Export | Space: Toggle theme', 8000);
+                localStorage.setItem('zine-maker-visited', 'true');
+            }
 
         });
     </script>
