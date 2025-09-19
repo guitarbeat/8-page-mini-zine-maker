@@ -31,6 +31,13 @@
             --slider-track: #e5e7eb;
             --slider-thumb: #3b82f6;
             --slider-thumb-hover: #2563eb;
+            /* Semantic color variables */
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
         }
 
         [data-theme="dark"] {
@@ -50,6 +57,13 @@
             --slider-track: #4b5563;
             --slider-thumb: #60a5fa;
             --slider-thumb-hover: #3b82f6;
+            /* Semantic color variables for dark theme */
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --success-color: #34d399;
+            --error-color: #f87171;
+            --warning-color: #fbbf24;
+            --info-color: #60a5fa;
         }
 
         body {
@@ -255,6 +269,346 @@
             transform: rotate(180deg);
         }
 
+        /* Upload Zone Styles */
+        .upload-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--accent-color);
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px var(--shadow-color);
+        }
+
+        .upload-zone.dragover {
+            border-color: var(--accent-color);
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            transform: scale(1.02);
+            box-shadow: 0 12px 35px rgba(59, 130, 246, 0.3);
+        }
+
+        .upload-zone.dragover .upload-icon {
+            transform: scale(1.2) rotate(5deg);
+            color: var(--accent-color);
+        }
+
+        .upload-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .upload-icon {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .upload-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .upload-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .upload-link {
+            color: var(--accent-color);
+            text-decoration: underline;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .upload-link:hover {
+            color: var(--accent-hover);
+        }
+
+        .upload-hint {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin: 0;
+            transition: color 0.3s ease;
+        }
+
+        /* Animated background pattern */
+        .upload-zone::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(59, 130, 246, 0.03) 10px,
+                rgba(59, 130, 246, 0.03) 20px
+            );
+            animation: slide 20s linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes slide {
+            0% { transform: translateX(-50px) translateY(-50px); }
+            100% { transform: translateX(50px) translateY(50px); }
+        }
+
+        /* Toast Notification Styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px 20px;
+            min-width: 300px;
+            max-width: 400px;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateX(-100%);
+            opacity: 0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--error-color);
+        }
+
+        .toast.warning {
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .toast.info {
+            border-left: 4px solid var(--info-color);
+        }
+
+        .toast-icon {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .toast-message {
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .toast-close:hover {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: var(--accent-color);
+            border-radius: 0 0 8px 8px;
+            transition: width linear;
+        }
+
+        /* Progress Bar Styles */
+        .progress-bar-container {
+            margin-top: 1rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--slider-track);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-color), var(--accent-hover));
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.4),
+                transparent
+            );
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Mobile Responsive Improvements */
+        @media (max-width: 768px) {
+            .zine {
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: repeat(4, 1fr);
+                grid-template-areas:
+                    "page1 page2"
+                    "page3 page4"
+                    "page5 page6"
+                    "page7 page8";
+                gap: 0.5rem;
+                padding: 1rem;
+            }
+
+            .zine > *:nth-child(1) { grid-area: page1; }
+            .zine > *:nth-child(2) { grid-area: page2; }
+            .zine > *:nth-child(3) { grid-area: page3; }
+            .zine > *:nth-child(4) { grid-area: page4; }
+            .zine > *:nth-child(5) { grid-area: page5; }
+            .zine > *:nth-child(6) { grid-area: page6; }
+            .zine > *:nth-child(7) { grid-area: page7; }
+            .zine > *:nth-child(8) { grid-area: page8; }
+
+            .upload-zone {
+                padding: 2rem 1rem;
+            }
+
+            .upload-title {
+                font-size: 1.25rem;
+            }
+
+            .toast-container {
+                left: 10px;
+                right: 10px;
+                top: 10px;
+            }
+
+            .toast {
+                min-width: auto;
+                max-width: none;
+            }
+
+            .theme-toggle {
+                top: 10px;
+                right: 10px;
+                width: 40px;
+                height: 40px;
+            }
+
+            .theme-toggle svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .flex.gap-4.justify-center {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .flex.gap-4.justify-center button {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .zine {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(8, 1fr);
+                grid-template-areas:
+                    "page1"
+                    "page2"
+                    "page3"
+                    "page4"
+                    "page5"
+                    "page6"
+                    "page7"
+                    "page8";
+            }
+
+            .zine > *:nth-child(1) { grid-area: page1; }
+            .zine > *:nth-child(2) { grid-area: page2; }
+            .zine > *:nth-child(3) { grid-area: page3; }
+            .zine > *:nth-child(4) { grid-area: page4; }
+            .zine > *:nth-child(5) { grid-area: page5; }
+            .zine > *:nth-child(6) { grid-area: page6; }
+            .zine > *:nth-child(7) { grid-area: page7; }
+            .zine > *:nth-child(8) { grid-area: page8; }
+        }
+
         /* Print styles - 8-page mini zine layout (correct zserge/zine approach) */
         @media print {
             html, body {
@@ -366,6 +720,9 @@
         </svg>
     </button>
 
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
     <div class="w-full mx-auto p-4">
         <!-- Header -->
         <div class="no-print text-center mb-8 fade-in-up">
@@ -374,21 +731,21 @@
         </div>
 
         <!-- Upload Section -->
-        <div class="no-print card max-w-4xl mx-auto mb-8 fade-in-up">
-            <div class="card-header">
-                <h3 class="card-title">Upload Your PDF</h3>
-                <p class="card-description">Select a PDF file to convert into a beautiful 8-page zine</p>
+        <div class="no-print p-6 rounded-lg shadow-md max-w-4xl mx-auto mb-8" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color);">
+            <div id="upload-zone" class="upload-zone" tabindex="0" role="button" aria-label="Upload PDF file">
+                <div class="upload-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="upload-icon">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <h3 class="upload-title">Drop your PDF here</h3>
+                    <p class="upload-subtitle">or <span class="upload-link">browse files</span></p>
+                    <p class="upload-hint">Supports PDF files up to 8 pages</p>
+                </div>
+                <input type="file" id="pdf-upload" class="hidden" accept="application/pdf" multiple="false">
             </div>
-            <label for="pdf-upload" class="btn-primary w-full text-center cursor-pointer flex items-center justify-center gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-                <span id="upload-text">Upload PDF</span>
-            </label>
-            <input type="file" id="pdf-upload" class="hidden" accept="application/pdf">
-            <p id="upload-status" class="text-center text-sm mt-4" style="color: var(--text-muted);"></p>
+            <p id="upload-status" class="text-center text-sm mt-3" style="color: var(--text-muted);"></p>
         </div>
 
         <!-- Reference Layout Info -->
@@ -410,6 +767,17 @@
         </div>
 
 
+
+        <!-- Progress Indicator -->
+        <div id="progress-container" class="no-print p-6 rounded-lg shadow-md max-w-4xl mx-auto mb-8" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); display: none;">
+            <h3 class="text-lg font-semibold mb-4 text-center" style="color: var(--text-primary);">Processing PDF</h3>
+            <div class="progress-bar-container">
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+                <div id="progress-text" class="progress-text">Starting...</div>
+            </div>
+        </div>
 
         <!-- Scaling Controls -->
         <div class="no-print card max-w-4xl mx-auto mb-8 fade-in-up">
@@ -470,13 +838,134 @@
             const printBtn = document.getElementById('printBtn');
             const exportPdfBtn = document.getElementById('exportPdfBtn');
             const pdfUpload = document.getElementById('pdf-upload');
-            const uploadText = document.getElementById('upload-text');
+            const uploadZone = document.getElementById('upload-zone');
             const uploadStatus = document.getElementById('upload-status');
             const themeToggle = document.getElementById('themeToggle');
             const themeIcon = document.getElementById('themeIcon');
+            const progressContainer = document.getElementById('progress-container');
+            const progressFill = document.getElementById('progress-fill');
+            const progressText = document.getElementById('progress-text');
+            const toastContainer = document.getElementById('toast-container');
             
             // Reference image URL (local copy)
             const referenceImageUrl = '/assets/reference-back-side.jpg';
+            
+            // Toast Notification System
+            const MAX_TOASTS = 3; // Maximum number of visible toasts
+            
+            function showToast(type, title, message, duration = 5000) {
+                // Remove excess toasts if we have too many
+                const existingToasts = toastContainer.querySelectorAll('.toast');
+                if (existingToasts.length >= MAX_TOASTS) {
+                    const oldestToast = existingToasts[0];
+                    oldestToast.classList.remove('show');
+                    setTimeout(() => oldestToast.remove(), 300);
+                }
+                
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                
+                const icons = {
+                    success: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>',
+                    error: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>',
+                    warning: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+                    info: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>'
+                };
+                
+                toast.innerHTML = `
+                    <div class="toast-icon">${icons[type] || icons.info}</div>
+                    <div class="toast-content">
+                        <div class="toast-title">${title}</div>
+                        <div class="toast-message">${message}</div>
+                    </div>
+                    <button class="toast-close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                    <div class="toast-progress" style="width: 100%; animation-duration: ${duration}ms;"></div>
+                `;
+                
+                // Add event listener for close button
+                const closeBtn = toast.querySelector('.toast-close');
+                closeBtn.addEventListener('click', () => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                });
+                
+                toastContainer.appendChild(toast);
+                
+                // Trigger animation
+                setTimeout(() => toast.classList.add('show'), 100);
+                
+                // Auto remove
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                }, duration);
+            }
+            
+            // Progress Bar Functions
+            let progressStartTime = 0;
+            const MIN_PROGRESS_DISPLAY_TIME = 1500; // Minimum 1.5 seconds
+            const PROGRESS_INITIAL_PERCENT = 10; // Starting progress percentage
+            const PROGRESS_RANGE_PERCENT = 80; // Range for processing (10% to 90%)
+            
+            function showProgress() {
+                progressContainer.style.display = 'block';
+                progressFill.style.width = '0%';
+                progressText.textContent = 'Starting...';
+                progressStartTime = Date.now();
+            }
+            
+            function updateProgress(percent, text) {
+                progressFill.style.width = percent + '%';
+                progressText.textContent = text;
+            }
+            
+            function hideProgress() {
+                const elapsed = Date.now() - progressStartTime;
+                const remainingTime = Math.max(0, MIN_PROGRESS_DISPLAY_TIME - elapsed);
+                
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                }, remainingTime + 500);
+            }
+            
+            // Drag and Drop Functionality
+            uploadZone.addEventListener('click', () => pdfUpload.click());
+            
+            // Keyboard accessibility
+            uploadZone.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    pdfUpload.click();
+                }
+            });
+            
+            uploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadZone.classList.add('dragover');
+            });
+            
+            uploadZone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+            });
+            
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const file = files[0];
+                    if (file.type === 'application/pdf') {
+                        pdfUpload.files = files;
+                        handleFileUpload(file);
+                    } else {
+                        showToast('error', 'Invalid File', 'Please select a PDF file.');
+                    }
+                }
+            });
             
             // Night mode functionality
             let isDarkMode = localStorage.getItem('theme') === 'dark' || 
@@ -714,17 +1203,15 @@
                 printWindow.close();
             }
 
-            // PDF upload handler with improved image conversion
-            pdfUpload.addEventListener('change', async (event) => {
-                const file = event.target.files[0];
+            // File upload handler
+            function handleFileUpload(file) {
                 if (!file || file.type !== 'application/pdf') {
-                    uploadStatus.textContent = 'Please select a PDF file.';
+                    showToast('error', 'Invalid File', 'Please select a PDF file.');
                     return;
                 }
 
-                uploadText.textContent = 'Processing...';
-                uploadStatus.classList.remove('text-red-500', 'font-bold');
-                uploadStatus.textContent = `Processing "${file.name}"...`;
+                showProgress();
+                showToast('info', 'Processing PDF', `Starting conversion of "${file.name}"...`);
 
                 const fileReader = new FileReader();
                 fileReader.onload = async function() {
@@ -732,7 +1219,9 @@
                     try {
                         const pdf = await pdfjsLib.getDocument(typedarray).promise;
                         const numPages = pdf.numPages;
-                        uploadStatus.textContent = `PDF has ${numPages} pages. Converting to images...`;
+                        
+                        updateProgress(PROGRESS_INITIAL_PERCENT, `PDF loaded with ${numPages} pages`);
+                        showToast('info', 'PDF Loaded', `Found ${numPages} pages. Starting conversion...`);
 
                         const maxPages = Math.min(8, numPages);
 
@@ -777,8 +1266,9 @@
                             const placeholder = document.querySelector(`#content-${i} .placeholder`);
                             placeholder.style.display = 'none';
                             
-                            // Update status
-                            uploadStatus.textContent = `Converting page ${i} of ${maxPages}...`;
+                            // Update progress
+                            const progress = PROGRESS_INITIAL_PERCENT + (i / maxPages) * PROGRESS_RANGE_PERCENT;
+                            updateProgress(progress, `Converting page ${i} of ${maxPages}...`);
                         }
                         
                         // Clear any remaining placeholders if PDF has fewer than 8 pages
@@ -789,20 +1279,44 @@
                             placeholder.style.display = 'flex';
                         }
                         
-                        // Reference image will be added to back side during print/export
+                        updateProgress(100, 'Conversion complete!');
+                        hideProgress();
                         
-                        uploadText.textContent = 'Upload New PDF';
-                        uploadStatus.textContent = `Successfully converted ${maxPages} pages to images. Ready to print!`;
+                        const blanksAdded = 8 - maxPages;
+                        const message = blanksAdded > 0 
+                            ? `Converted ${maxPages} page(s) and added ${blanksAdded} blank page(s). Ready to print!`
+                            : `Successfully converted ${maxPages} pages. Ready to print!`;
+                        
+                        showToast('success', 'PDF Converted', message);
+                        uploadStatus.textContent = message;
+                        uploadStatus.classList.remove('text-red-500', 'text-green-600', 'font-bold');
                         uploadStatus.classList.add('text-green-600', 'font-bold');
+                        
+                        // Reset file input to allow re-uploading the same file
+                        pdfUpload.value = '';
 
                     } catch (error) {
                         console.error('Error processing PDF:', error);
+                        hideProgress();
+                        showToast('error', 'Conversion Failed', 'Could not process this PDF. It may be corrupted or protected.');
+                        uploadStatus.classList.remove('text-green-600', 'font-bold');
                         uploadStatus.classList.add('text-red-500', 'font-bold');
                         uploadStatus.textContent = 'Error: Could not process this PDF. It may be corrupted or protected.';
-                        uploadText.textContent = 'Try a Different PDF';
                     }
                 };
                 fileReader.readAsArrayBuffer(file);
+            }
+
+            // PDF upload handler
+            pdfUpload.addEventListener('change', (event) => {
+                const files = event.target.files;
+                if (files.length > 1) {
+                    showToast('warning', 'Multiple Files', 'Please select only one PDF file at a time.');
+                    return;
+                }
+                if (files.length === 1) {
+                    handleFileUpload(files[0]);
+                }
             });
 
             // Print button handler
@@ -810,10 +1324,11 @@
                 const hasContent = Array.from(document.querySelectorAll('.page-content img')).some(img => img.src && img.src !== '');
                 
                 if (!hasContent) {
-                    alert('Please upload a PDF first before printing.');
+                    showToast('warning', 'No PDF Uploaded', 'Please upload a PDF first before printing.');
                     return;
                 }
                 
+                showToast('info', 'Opening Print Dialog', 'Preparing your zine for printing...');
                 // Create print layout with both front and back
                 createTwoPagePrintLayout();
             });
@@ -823,11 +1338,13 @@
                 const hasContent = Array.from(document.querySelectorAll('.page-content img')).some(img => img.src && img.src !== '');
                 
                 if (!hasContent) {
-                    alert('Please upload a PDF first before exporting.');
+                    showToast('warning', 'No PDF Uploaded', 'Please upload a PDF first before exporting.');
                     return;
                 }
 
                 try {
+                    showToast('info', 'Exporting PDF', 'Creating your zine PDF...');
+                    
                     // Show loading state
                     exportPdfBtn.disabled = true;
                     exportPdfBtn.innerHTML = `
@@ -963,6 +1480,7 @@
                         `;
                         
                         // Show success message
+                        showToast('success', 'Export Complete', `PDF exported successfully as ${filename}`);
                         uploadStatus.textContent = `PDF exported successfully as ${filename}`;
                         uploadStatus.classList.remove('text-red-500', 'text-green-600', 'font-bold');
                         uploadStatus.classList.add('text-green-600', 'font-bold');
@@ -984,6 +1502,7 @@
                     `;
                     
                     // Show error message
+                    showToast('error', 'Export Failed', `Error exporting PDF: ${error.message}`);
                     uploadStatus.textContent = `Error exporting PDF: ${error.message}`;
                     uploadStatus.classList.remove('text-green-600', 'font-bold');
                     uploadStatus.classList.add('text-red-500', 'font-bold');
@@ -1000,6 +1519,45 @@
             
             // Initialize with default values
             updateScale(100);
+
+            // Keyboard Shortcuts
+            document.addEventListener('keydown', (e) => {
+                // Ctrl/Cmd + O: Open file dialog
+                if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
+                    e.preventDefault();
+                    pdfUpload.click();
+                }
+                
+                // Ctrl/Cmd + P: Print
+                if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                    e.preventDefault();
+                    printBtn.click();
+                }
+                
+                // Ctrl/Cmd + S: Export PDF
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    exportPdfBtn.click();
+                }
+                
+                // Space: Toggle theme (only when no input is focused)
+                if (e.key === ' ' && e.target === document.body && !e.target.matches('input, textarea, [contenteditable]')) {
+                    e.preventDefault();
+                    toggleTheme();
+                }
+                
+                // Escape: Close any open modals or clear selection
+                if (e.key === 'Escape') {
+                    // Clear any active drag states
+                    uploadZone.classList.remove('dragover');
+                }
+            });
+
+            // Show keyboard shortcuts help only on first visit
+            if (!localStorage.getItem('zine-maker-visited')) {
+                showToast('info', 'Keyboard Shortcuts', 'Ctrl+O: Open PDF | Ctrl+P: Print | Ctrl+S: Export | Space: Toggle theme', 8000);
+                localStorage.setItem('zine-maker-visited', 'true');
+            }
 
         });
     </script>
