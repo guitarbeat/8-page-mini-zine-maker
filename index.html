@@ -959,7 +959,17 @@
                 if (files.length > 0) {
                     const file = files[0];
                     if (file.type === 'application/pdf') {
-                        pdfUpload.files = files;
+                        // Keep the file input in sync with the dropped file when possible
+                        try {
+                            if (typeof DataTransfer !== 'undefined') {
+                                const dataTransfer = new DataTransfer();
+                                dataTransfer.items.add(file);
+                                pdfUpload.files = dataTransfer.files;
+                            }
+                        } catch (error) {
+                            console.warn('Could not sync dropped file to input element:', error);
+                        }
+
                         handleFileUpload(file);
                     } else {
                         showToast('error', 'Invalid File', 'Please select a PDF file.');
