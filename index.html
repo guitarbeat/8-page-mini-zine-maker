@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF to Zine Maker</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -22,18 +21,18 @@
     <!-- Toast Container -->
     <div id="toast-container" class="toast-container"></div>
 
-    <div class="w-full mx-auto p-4">
+    <div class="container">
         <!-- Header -->
-        <div class="no-print text-center mb-8 fade-in-up">
-            <h1 class="text-3xl md:text-5xl font-bold mb-4" style="color: var(--text-primary); background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">PDF to Zine Maker</h1>
-            <p class="text-lg md:text-xl" style="color: var(--text-secondary);">Create a beautiful foldable 8-page zine from any PDF file</p>
-        </div>
+        <header class="no-print section text-center fade-in-up">
+            <h1 class="text-primary">PDF to Zine Maker</h1>
+            <p class="text-secondary">Create a beautiful foldable 8-page zine from any PDF file</p>
+        </header>
 
         <!-- Upload Section -->
-        <div class="no-print p-6 rounded-lg shadow-md max-w-4xl mx-auto mb-8" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color);">
-            <div id="upload-zone" class="upload-zone" tabindex="0" role="button" aria-label="Upload PDF file">
-                <div class="upload-content">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="upload-icon">
+        <section class="no-print section">
+            <div class="card container" style="max-width: 48rem;">
+                <div id="upload-zone" class="upload-zone" tabindex="0" role="button" aria-label="Upload PDF file">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="upload-icon">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="17 8 12 3 7 8"></polyline>
                         <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -41,77 +40,80 @@
                     <h3 class="upload-title">Drop your PDF here</h3>
                     <p class="upload-subtitle">or <span class="upload-link">browse files</span></p>
                     <p class="upload-hint">Supports PDF files up to 8 pages</p>
+                    <input type="file" id="pdf-upload" class="hidden" accept="application/pdf" multiple="false">
                 </div>
-                <input type="file" id="pdf-upload" class="hidden" accept="application/pdf" multiple="false">
+                <p id="upload-status" class="text-center text-muted" style="margin-top: var(--space-md); font-size: var(--font-size-sm);"></p>
             </div>
-            <p id="upload-status" class="text-center text-sm mt-3" style="color: var(--text-muted);"></p>
-        </div>
+        </section>
 
         <!-- Reference Layout Info -->
-        <div class="no-print card max-w-4xl mx-auto mb-8 fade-in-up">
-            <div class="card-header">
-                <h3 class="card-title">Zine Layout Reference</h3>
-                <p class="card-description">Using the correct 8-page zine layout for proper folding</p>
-            </div>
-            <div class="text-center mb-4">
-                <div class="text-sm mb-3 font-medium" style="color: var(--text-muted);">Page Layout (when printed):</div>
-                <div class="text-sm font-mono p-4 rounded-lg" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); color: var(--text-primary); border: 1px solid var(--border-color);">
-                    Page 5 | Page 4 | Page 3 | Page 2<br>
-                    Page 6 | Page 7 | Page 8 | Page 1
+        <section class="no-print section">
+            <div class="card container fade-in-up" style="max-width: 48rem;">
+                <div class="card-header">
+                    <h3 class="card-title">Zine Layout Reference</h3>
+                    <p class="card-description">Using the correct 8-page zine layout for proper folding</p>
+                </div>
+                <div class="text-center" style="margin-bottom: var(--space-md);">
+                    <div class="text-muted" style="font-size: var(--font-size-sm); margin-bottom: var(--space-md); font-weight: var(--font-weight-medium);">Page Layout (when printed):</div>
+                    <div style="font-size: var(--font-size-sm); font-family: monospace; padding: var(--space-md); border-radius: var(--radius-md); background: var(--color-accent-light); color: var(--color-text-primary); border: 1px solid var(--color-border);">
+                        Page 5 | Page 4 | Page 3 | Page 2<br>
+                        Page 6 | Page 7 | Page 8 | Page 1
+                    </div>
+                </div>
+                <div class="text-center">
+                    <p class="text-success" style="font-size: var(--font-size-sm); font-weight: var(--font-weight-medium);">✓ Reference image will be automatically included in print/export</p>
                 </div>
             </div>
-            <div class="text-center">
-                <p class="text-sm font-medium" style="color: var(--success-color);">✓ Reference image will be automatically included in print/export</p>
-            </div>
-        </div>
-
-
+        </section>
 
         <!-- Progress Indicator -->
-        <div id="progress-container" class="no-print p-6 rounded-lg shadow-md max-w-4xl mx-auto mb-8" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); display: none;">
-            <h3 class="text-lg font-semibold mb-4 text-center" style="color: var(--text-primary);">Processing PDF</h3>
-            <div class="progress-bar-container">
-                <div class="progress-bar">
-                    <div id="progress-fill" class="progress-fill"></div>
+        <section id="progress-container" class="no-print section progress-container">
+            <div class="card container" style="max-width: 48rem;">
+                <h3 class="text-primary text-center" style="margin-bottom: var(--space-md); font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold);">Processing PDF</h3>
+                <div>
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                    <div id="progress-text" class="progress-text">Starting...</div>
                 </div>
-                <div id="progress-text" class="progress-text">Starting...</div>
             </div>
-        </div>
+        </section>
 
         <!-- Scaling Controls -->
-        <div class="no-print card max-w-4xl mx-auto mb-8 fade-in-up">
-            <div class="card-header">
-                <h3 class="card-title">Page Scale</h3>
-                <p class="card-description">Adjust the size of your zine pages for optimal printing</p>
-            </div>
-            
-            <div>
-                <label for="scale-slider" class="block text-sm font-medium mb-3" style="color: var(--text-secondary);">
-                    Scale: <span id="scale-value" class="font-bold" style="color: var(--accent-primary);">100%</span>
-                </label>
-                <input type="range" id="scale-slider" min="50" max="200" value="100" 
-                       class="w-full slider">
-                <div class="flex justify-between text-xs mt-2" style="color: var(--text-muted);">
-                    <span>50%</span>
-                    <span>100%</span>
-                    <span>200%</span>
+        <section class="no-print section">
+            <div class="card container fade-in-up" style="max-width: 48rem;">
+                <div class="card-header">
+                    <h3 class="card-title">Page Scale</h3>
+                    <p class="card-description">Adjust the size of your zine pages for optimal printing</p>
+                </div>
+                <div>
+                    <div class="slider-label">
+                        <label for="scale-slider">Scale</label>
+                        <span id="scale-value" class="slider-value">100%</span>
+                    </div>
+                    <input type="range" id="scale-slider" min="50" max="200" value="100" class="slider">
+                    <div class="slider-ticks">
+                        <span>50%</span>
+                        <span>100%</span>
+                        <span>200%</span>
+                    </div>
                 </div>
             </div>
-        </div>
+        </section>
 
         <!-- Print and Export Buttons -->
-        <div class="no-print text-center mb-8 fade-in-up">
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <button id="printBtn" class="btn-success w-full sm:w-auto">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <section class="no-print section text-center fade-in-up">
+            <div class="btn-group">
+                <button id="printBtn" class="btn btn-success">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="6 9 6 2 18 2 18 9"></polyline>
                         <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
                         <rect x="6" y="14" width="12" height="8"></rect>
                     </svg>
                     Print Zine
                 </button>
-                <button id="exportPdfBtn" class="btn-primary w-full sm:w-auto">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <button id="exportPdfBtn" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
                         <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -119,7 +121,7 @@
                     Export PDF
                 </button>
             </div>
-        </div>
+        </section>
 
         <!-- Zine Container -->
         <div class="zine scale-in">
@@ -209,7 +211,7 @@
             const PROGRESS_RANGE_PERCENT = 80; // Range for processing (10% to 90%)
             
             function showProgress() {
-                progressContainer.style.display = 'block';
+                progressContainer.classList.add('active');
                 progressFill.style.width = '0%';
                 progressText.textContent = 'Starting...';
                 progressStartTime = Date.now();
@@ -225,7 +227,7 @@
                 const remainingTime = Math.max(0, MIN_PROGRESS_DISPLAY_TIME - elapsed);
                 
                 setTimeout(() => {
-                    progressContainer.style.display = 'none';
+                    progressContainer.classList.remove('active');
                 }, remainingTime + 500);
             }
             
@@ -598,8 +600,8 @@
                         
                         showToast('success', 'PDF Converted', message);
                         uploadStatus.textContent = message;
-                        uploadStatus.classList.remove('text-red-500', 'text-green-600', 'font-bold');
-                        uploadStatus.classList.add('text-green-600', 'font-bold');
+                        uploadStatus.classList.remove('text-error');
+                        uploadStatus.classList.add('text-success');
                         
                         // Reset file input to allow re-uploading the same file
                         pdfUpload.value = '';
@@ -608,8 +610,8 @@
                         console.error('Error processing PDF:', error);
                         hideProgress();
                         showToast('error', 'Conversion Failed', 'Could not process this PDF. It may be corrupted or protected.');
-                        uploadStatus.classList.remove('text-green-600', 'font-bold');
-                        uploadStatus.classList.add('text-red-500', 'font-bold');
+                        uploadStatus.classList.remove('text-success');
+                        uploadStatus.classList.add('text-error');
                         uploadStatus.textContent = 'Error: Could not process this PDF. It may be corrupted or protected.';
                     }
                 };
@@ -791,8 +793,8 @@
                         // Show success message
                         showToast('success', 'Export Complete', `PDF exported successfully as ${filename}`);
                         uploadStatus.textContent = `PDF exported successfully as ${filename}`;
-                        uploadStatus.classList.remove('text-red-500', 'text-green-600', 'font-bold');
-                        uploadStatus.classList.add('text-green-600', 'font-bold');
+                        uploadStatus.classList.remove('text-error');
+                        uploadStatus.classList.add('text-success');
                     };
                     referenceImg.src = referenceImageUrl;
                     
@@ -813,8 +815,8 @@
                     // Show error message
                     showToast('error', 'Export Failed', `Error exporting PDF: ${error.message}`);
                     uploadStatus.textContent = `Error exporting PDF: ${error.message}`;
-                    uploadStatus.classList.remove('text-green-600', 'font-bold');
-                    uploadStatus.classList.add('text-red-500', 'font-bold');
+                    uploadStatus.classList.remove('text-success');
+                    uploadStatus.classList.add('text-error');
                 }
             }
 
