@@ -71,7 +71,7 @@
             <div class="card container" style="max-width: 48rem;">
                 <h3 class="text-primary text-center" style="margin-bottom: var(--space-md); font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold);">Processing PDF</h3>
                 <div>
-                    <div class="progress-bar">
+                    <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-describedby="progress-text">
                         <div id="progress-fill" class="progress-fill"></div>
                     </div>
                     <div id="progress-text" class="progress-text">Starting...</div>
@@ -219,6 +219,8 @@
             
             function updateProgress(percent, text) {
                 progressFill.style.width = percent + '%';
+                // Update ARIA attribute for accessibility
+                progressContainer.querySelector('.progress-bar').setAttribute('aria-valuenow', Math.round(percent));
                 progressText.textContent = text;
             }
             

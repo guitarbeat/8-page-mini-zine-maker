@@ -6,6 +6,6 @@ const { chromium } = require('playwright');
   const page = await browser.newPage();
   await page.setViewportSize({ width: 375, height: 667 }); // Emulate a mobile device
   await page.goto('http://localhost:8000');
-  await page.screenshot({ path: '/home/jules/verification/verification.png' });
+  await page.screenshot({ path: 'verification_before.png' });
   await browser.close();
 })();
