@@ -60,6 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Current scaling state
     let currentScale = 100;
 
+    // Store object URLs for cleanup
+    let pagePreviewUrls = [];
+
     // Scaling functions
     function updateScale(scale) {
         currentScale = scale;
@@ -206,6 +209,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 let fallbackWidth = 1000;
                 let fallbackHeight = 1400;
 
+                // Cleanup previous object URLs to prevent memory leaks
+                pagePreviewUrls.forEach(url => URL.revokeObjectURL(url));
+                pagePreviewUrls = [];
+
                 // Process pages sequentially to avoid memory issues
                 for (let i = 1; i <= maxPages; i++) {
                     try {
@@ -242,11 +249,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         await page.render(renderContext).promise;
 
-                        // Convert to PNG data URL with high quality
+                        // Convert to PNG blob URL (async and lighter on memory)
                         const imgPreview = document.getElementById(`preview-${i}`);
                         if (imgPreview) {
-                            imgPreview.src = canvas.toDataURL('image/png', 1.0);
-                            imgPreview.classList.add('scale-in');
+                            canvas.toBlob((blob) => {
+                                const url = URL.createObjectURL(blob);
+                                pagePreviewUrls.push(url);
+                                imgPreview.src = url;
+                                imgPreview.classList.add('scale-in');
+                            }, 'image/png', 1.0);
                         }
 
                         // Hide placeholder with animation
@@ -424,8 +435,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
             // Add the front side (zine) to PDF
-            const imgData = canvas.toDataURL('image/png', 1.0);
-            pdf.addImage(imgData, 'PNG', 0, 0, 297, 210);
+            // Pass canvas directly to avoid expensive base64 conversion
+            pdf.addImage(canvas, 'PNG', 0, 0, 297, 210);
 
             // Add new page for back side
             pdf.addPage();
@@ -445,8 +456,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 backSideContext.drawImage(referenceImg, -backSideCanvas.width / 2, -backSideCanvas.height / 2, backSideCanvas.width, backSideCanvas.height);
                 backSideContext.restore();
 
-                const backSideData = backSideCanvas.toDataURL('image/png', 1.0);
-                pdf.addImage(backSideData, 'PNG', 0, 0, 297, 210);
+                // Pass canvas directly to avoid expensive base64 conversion
+                pdf.addImage(backSideCanvas, 'PNG', 0, 0, 297, 210);
 
                 const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
                 const filename = `zine-export-${timestamp}.pdf`;
