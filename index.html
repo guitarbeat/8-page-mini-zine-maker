@@ -129,7 +129,6 @@
         </div>
     </div>
 
-    <script src="/assets/app.js"></script>
     <script>
         // Set worker source for pdf.js
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js`;
@@ -147,6 +146,14 @@
             const progressFill = document.getElementById('progress-fill');
             const progressText = document.getElementById('progress-text');
             const toastContainer = document.getElementById('toast-container');
+
+            // Track active object URLs to prevent memory leaks
+            let activeObjectUrls = [];
+
+            function revokeActiveObjectUrls() {
+                activeObjectUrls.forEach(url => URL.revokeObjectURL(url));
+                activeObjectUrls = [];
+            }
             
             // Reference image URL (local copy)
             const referenceImageUrl = '/assets/reference-back-side.jpg';
@@ -526,6 +533,9 @@
 
                 const fileReader = new FileReader();
                 fileReader.onload = async function() {
+                    // Clean up previous object URLs
+                    revokeActiveObjectUrls();
+
                     const typedarray = new Uint8Array(this.result);
                     try {
                         const pdf = await pdfjsLib.getDocument(typedarray).promise;
@@ -569,9 +579,19 @@
                             
                             await page.render(renderContext).promise;
                             
-                            // Convert to PNG data URL with high quality
+                            // Convert to Blob and Object URL for performance
                             const imgPreview = document.getElementById(`preview-${i}`);
-                            imgPreview.src = canvas.toDataURL('image/png', 1.0);
+                            if (imgPreview) {
+                                await new Promise(resolve => {
+                                    canvas.toBlob(blob => {
+                                        const url = URL.createObjectURL(blob);
+                                        activeObjectUrls.push(url);
+                                        imgPreview.src = url;
+                                        imgPreview.classList.add('scale-in');
+                                        resolve();
+                                    }, 'image/png', 1.0);
+                                });
+                            }
                             
                             // Hide placeholder
                             const placeholder = document.querySelector(`#content-${i} .placeholder`);
