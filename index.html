@@ -210,6 +210,9 @@
             const PROGRESS_INITIAL_PERCENT = 10; // Starting progress percentage
             const PROGRESS_RANGE_PERCENT = 80; // Range for processing (10% to 90%)
             
+            // Track object URLs to prevent memory leaks
+            let pageObjectUrls = [];
+
             function showProgress() {
                 progressContainer.classList.add('active');
                 progressFill.style.width = '0%';
@@ -521,6 +524,12 @@
                     return;
                 }
 
+                // Revoke previous object URLs to avoid memory leaks
+                if (pageObjectUrls.length > 0) {
+                    pageObjectUrls.forEach(url => URL.revokeObjectURL(url));
+                    pageObjectUrls = [];
+                }
+
                 showProgress();
                 showToast('info', 'Processing PDF', `Starting conversion of "${file.name}"...`);
 
@@ -569,13 +578,23 @@
                             
                             await page.render(renderContext).promise;
                             
-                            // Convert to PNG data URL with high quality
-                            const imgPreview = document.getElementById(`preview-${i}`);
-                            imgPreview.src = canvas.toDataURL('image/png', 1.0);
-                            
-                            // Hide placeholder
-                            const placeholder = document.querySelector(`#content-${i} .placeholder`);
-                            placeholder.style.display = 'none';
+                            // Optimize: Use toBlob and createObjectURL instead of toDataURL
+                            // This prevents blocking the main thread and uses less memory
+                            await new Promise(resolve => {
+                                canvas.toBlob(blob => {
+                                    const url = URL.createObjectURL(blob);
+                                    pageObjectUrls.push(url);
+
+                                    const imgPreview = document.getElementById(`preview-${i}`);
+                                    imgPreview.src = url;
+
+                                    // Hide placeholder
+                                    const placeholder = document.querySelector(`#content-${i} .placeholder`);
+                                    placeholder.style.display = 'none';
+
+                                    resolve();
+                                }, 'image/png', 1.0);
+                            });
                             
                             // Update progress
                             const progress = PROGRESS_INITIAL_PERCENT + (i / maxPages) * PROGRESS_RANGE_PERCENT;
