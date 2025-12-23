@@ -129,7 +129,6 @@
         </div>
     </div>
 
-    <script src="/assets/app.js"></script>
     <script>
         // Set worker source for pdf.js
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js`;
@@ -148,6 +147,9 @@
             const progressText = document.getElementById('progress-text');
             const toastContainer = document.getElementById('toast-container');
             
+            // Track object URLs to prevent memory leaks
+            let previewObjectUrls = [];
+
             // Reference image URL (local copy)
             const referenceImageUrl = '/assets/reference-back-side.jpg';
             
@@ -521,6 +523,10 @@
                     return;
                 }
 
+                // Cleanup previous preview images to free memory
+                previewObjectUrls.forEach(url => URL.revokeObjectURL(url));
+                previewObjectUrls = [];
+
                 showProgress();
                 showToast('info', 'Processing PDF', `Starting conversion of "${file.name}"...`);
 
@@ -569,9 +575,16 @@
                             
                             await page.render(renderContext).promise;
                             
-                            // Convert to PNG data URL with high quality
-                            const imgPreview = document.getElementById(`preview-${i}`);
-                            imgPreview.src = canvas.toDataURL('image/png', 1.0);
+                            // Optimization: Use toBlob + createObjectURL to avoid blocking main thread with large Data URLs
+                            await new Promise(resolve => {
+                                canvas.toBlob(blob => {
+                                    const url = URL.createObjectURL(blob);
+                                    previewObjectUrls.push(url);
+                                    const imgPreview = document.getElementById(`preview-${i}`);
+                                    imgPreview.src = url;
+                                    resolve();
+                                }, 'image/png', 1.0);
+                            });
                             
                             // Hide placeholder
                             const placeholder = document.querySelector(`#content-${i} .placeholder`);
@@ -746,8 +759,8 @@
                     });
                     
                     // Add the front side (zine) to PDF
-                    const imgData = canvas.toDataURL('image/png', 1.0);
-                    pdf.addImage(imgData, 'PNG', 0, 0, 297, 210); // A4 landscape dimensions
+                    // Optimization: Pass canvas directly to avoid expensive base64 conversion
+                    pdf.addImage(canvas, 'PNG', 0, 0, 297, 210); // A4 landscape dimensions
                     
                     // Add new page for back side
                     pdf.addPage();
@@ -769,8 +782,7 @@
                         backSideContext.restore();
                         
                         // Add back side to PDF
-                        const backSideData = backSideCanvas.toDataURL('image/png', 1.0);
-                        pdf.addImage(backSideData, 'PNG', 0, 0, 297, 210);
+                        pdf.addImage(backSideCanvas, 'PNG', 0, 0, 297, 210);
                         
                         // Generate filename with timestamp
                         const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
