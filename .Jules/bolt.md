@@ -1,0 +1,3 @@
+## 2024-12-27 - [Optimized PDF Preview Generation]
+**Learning:** Using `canvas.toDataURL()` for generating large images (like high-res PDF pages) creates massive strings that block the main thread and spike memory usage. Switching to `canvas.toBlob()` with `URL.createObjectURL()` significantly reduces memory overhead and improves responsiveness. However, `toBlob` is asynchronous, so it needs to be properly awaited if sequential processing is required (as in this case to avoid PDF.js memory pressure).
+**Action:** Always prefer `toBlob` + `createObjectURL` over `toDataURL` for large canvas exports, but remember to handle the async nature and revoke the Object URLs to prevent memory leaks.

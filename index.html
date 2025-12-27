@@ -209,6 +209,14 @@
             const MIN_PROGRESS_DISPLAY_TIME = 1500; // Minimum 1.5 seconds
             const PROGRESS_INITIAL_PERCENT = 10; // Starting progress percentage
             const PROGRESS_RANGE_PERCENT = 80; // Range for processing (10% to 90%)
+
+            // Track object URLs for cleanup to prevent memory leaks
+            let pageObjectUrls = [];
+
+            function cleanupObjectUrls() {
+                pageObjectUrls.forEach(url => URL.revokeObjectURL(url));
+                pageObjectUrls = [];
+            }
             
             function showProgress() {
                 progressContainer.classList.add('active');
@@ -522,6 +530,7 @@
                 }
 
                 showProgress();
+                cleanupObjectUrls(); // Clean up previous previews
                 showToast('info', 'Processing PDF', `Starting conversion of "${file.name}"...`);
 
                 const fileReader = new FileReader();
@@ -569,9 +578,18 @@
                             
                             await page.render(renderContext).promise;
                             
-                            // Convert to PNG data URL with high quality
-                            const imgPreview = document.getElementById(`preview-${i}`);
-                            imgPreview.src = canvas.toDataURL('image/png', 1.0);
+                            // Convert to blob and create object URL (much faster than toDataURL)
+                            // We wrap in Promise to maintain sequential processing
+                            await new Promise(resolve => {
+                                canvas.toBlob(blob => {
+                                    const url = URL.createObjectURL(blob);
+                                    pageObjectUrls.push(url);
+
+                                    const imgPreview = document.getElementById(`preview-${i}`);
+                                    imgPreview.src = url;
+                                    resolve();
+                                }, 'image/png', 1.0);
+                            });
                             
                             // Hide placeholder
                             const placeholder = document.querySelector(`#content-${i} .placeholder`);
