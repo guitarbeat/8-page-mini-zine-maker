@@ -12,7 +12,7 @@
 </head>
 <body>
     <!-- Night Mode Toggle Button -->
-    <button id="themeToggle" class="theme-toggle" title="Toggle night mode">
+    <button id="themeToggle" class="theme-toggle" title="Toggle night mode (Space)" aria-keyshortcuts="Space">
         <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
         </svg>
@@ -31,7 +31,7 @@
         <!-- Upload Section -->
         <section class="no-print section">
             <div class="card container" style="max-width: 48rem;">
-                <div id="upload-zone" class="upload-zone" tabindex="0" role="button" aria-label="Upload PDF file">
+                <div id="upload-zone" class="upload-zone" tabindex="0" role="button" aria-label="Upload PDF file" title="Upload PDF (Ctrl+O)" aria-keyshortcuts="Control+O">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="upload-icon">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="17 8 12 3 7 8"></polyline>
@@ -104,7 +104,7 @@
         <!-- Print and Export Buttons -->
         <section class="no-print section text-center fade-in-up">
             <div class="btn-group">
-                <button id="printBtn" class="btn btn-success">
+                <button id="printBtn" class="btn btn-success" title="Print Zine (Ctrl+P)" aria-keyshortcuts="Control+P">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="6 9 6 2 18 2 18 9"></polyline>
                         <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
@@ -112,7 +112,7 @@
                     </svg>
                     Print Zine
                 </button>
-                <button id="exportPdfBtn" class="btn btn-primary">
+                <button id="exportPdfBtn" class="btn btn-primary" title="Export PDF (Ctrl+S)" aria-keyshortcuts="Control+S">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
