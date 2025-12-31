@@ -312,6 +312,14 @@
             // Current scaling state
             let currentScale = 100;
             
+            // Track object URLs to prevent memory leaks
+            let pageObjectUrls = [];
+
+            function cleanupObjectUrls() {
+                pageObjectUrls.forEach(url => URL.revokeObjectURL(url));
+                pageObjectUrls = [];
+            }
+
             // Scaling functions
             function updateScale(scale) {
                 currentScale = scale;
@@ -526,6 +534,7 @@
 
                 const fileReader = new FileReader();
                 fileReader.onload = async function() {
+                    cleanupObjectUrls(); // Clean up previous uploads
                     const typedarray = new Uint8Array(this.result);
                     try {
                         const pdf = await pdfjsLib.getDocument(typedarray).promise;
@@ -569,9 +578,14 @@
                             
                             await page.render(renderContext).promise;
                             
-                            // Convert to PNG data URL with high quality
+                            // Convert to Blob URL for better performance and memory usage
+                            // This avoids creating large base64 strings that block the main thread
+                            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
+                            const url = URL.createObjectURL(blob);
+                            pageObjectUrls.push(url);
+
                             const imgPreview = document.getElementById(`preview-${i}`);
-                            imgPreview.src = canvas.toDataURL('image/png', 1.0);
+                            imgPreview.src = url;
                             
                             // Hide placeholder
                             const placeholder = document.querySelector(`#content-${i} .placeholder`);
