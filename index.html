@@ -129,7 +129,6 @@
         </div>
     </div>
 
-    <script src="/assets/app.js"></script>
     <script>
         // Set worker source for pdf.js
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js`;
@@ -148,6 +147,14 @@
             const progressText = document.getElementById('progress-text');
             const toastContainer = document.getElementById('toast-container');
             
+            // Track object URLs for memory management
+            let pageObjectUrls = [];
+
+            function cleanupObjectUrls() {
+                pageObjectUrls.forEach(url => URL.revokeObjectURL(url));
+                pageObjectUrls = [];
+            }
+
             // Reference image URL (local copy)
             const referenceImageUrl = '/assets/reference-back-side.jpg';
             
@@ -534,6 +541,7 @@
                         updateProgress(PROGRESS_INITIAL_PERCENT, `PDF loaded with ${numPages} pages`);
                         showToast('info', 'PDF Loaded', `Found ${numPages} pages. Starting conversion...`);
 
+                        cleanupObjectUrls();
                         const maxPages = Math.min(8, numPages);
 
                         // Process pages sequentially to avoid memory issues
@@ -569,9 +577,17 @@
                             
                             await page.render(renderContext).promise;
                             
-                            // Convert to PNG data URL with high quality
+                            // Convert to Blob URL for better performance and memory usage
                             const imgPreview = document.getElementById(`preview-${i}`);
-                            imgPreview.src = canvas.toDataURL('image/png', 1.0);
+
+                            await new Promise(resolve => {
+                                canvas.toBlob(blob => {
+                                    const url = URL.createObjectURL(blob);
+                                    pageObjectUrls.push(url);
+                                    imgPreview.src = url;
+                                    resolve();
+                                }, 'image/png', 1.0);
+                            });
                             
                             // Hide placeholder
                             const placeholder = document.querySelector(`#content-${i} .placeholder`);
