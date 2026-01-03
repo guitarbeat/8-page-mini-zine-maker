@@ -148,6 +148,14 @@
             const progressText = document.getElementById('progress-text');
             const toastContainer = document.getElementById('toast-container');
             
+            // Global array to track object URLs for cleanup
+            let pageObjectUrls = [];
+
+            function cleanupObjectUrls() {
+                pageObjectUrls.forEach(url => URL.revokeObjectURL(url));
+                pageObjectUrls = [];
+            }
+
             // Reference image URL (local copy)
             const referenceImageUrl = '/assets/reference-back-side.jpg';
             
@@ -536,6 +544,9 @@
 
                         const maxPages = Math.min(8, numPages);
 
+                        // Cleanup previous object URLs to release memory
+                        cleanupObjectUrls();
+
                         // Process pages sequentially to avoid memory issues
                         for (let i = 1; i <= maxPages; i++) {
                             const page = await pdf.getPage(i);
@@ -569,9 +580,18 @@
                             
                             await page.render(renderContext).promise;
                             
-                            // Convert to PNG data URL with high quality
-                            const imgPreview = document.getElementById(`preview-${i}`);
-                            imgPreview.src = canvas.toDataURL('image/png', 1.0);
+                            // Convert to Blob URL for better performance and memory usage
+                            // Use Promise wrapper for toBlob as it's callback-based
+                            await new Promise(resolve => {
+                                canvas.toBlob(blob => {
+                                    const url = URL.createObjectURL(blob);
+                                    pageObjectUrls.push(url);
+
+                                    const imgPreview = document.getElementById(`preview-${i}`);
+                                    imgPreview.src = url;
+                                    resolve();
+                                }, 'image/png', 1.0);
+                            });
                             
                             // Hide placeholder
                             const placeholder = document.querySelector(`#content-${i} .placeholder`);
