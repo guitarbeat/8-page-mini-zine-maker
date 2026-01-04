@@ -1,0 +1,3 @@
+## 2024-05-23 - [Optimized PDF Processing]
+**Learning:** `canvas.toDataURL()` is synchronous and can block the main thread for large images, causing UI freezes. `canvas.toBlob()` is asynchronous and creates a Blob which can be accessed via `URL.createObjectURL()`, avoiding the expensive Base64 string creation. Additionally, `jspdf.addImage()` accepts `HTMLCanvasElement` directly, removing the need for any intermediate data URL or blob conversion for the final export.
+**Action:** Always prefer `canvas.toBlob()` + `URL.createObjectURL()` for displaying canvas content in `<img>` tags. Pass canvas elements directly to `jspdf` whenever possible. Remember to revoke object URLs to prevent memory leaks.
