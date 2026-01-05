@@ -210,6 +210,14 @@
             const PROGRESS_INITIAL_PERCENT = 10; // Starting progress percentage
             const PROGRESS_RANGE_PERCENT = 80; // Range for processing (10% to 90%)
             
+            // Track object URLs to prevent memory leaks
+            let pageObjectUrls = [];
+
+            function cleanupObjectUrls() {
+                pageObjectUrls.forEach(url => URL.revokeObjectURL(url));
+                pageObjectUrls = [];
+            }
+
             function showProgress() {
                 progressContainer.classList.add('active');
                 progressFill.style.width = '0%';
@@ -521,6 +529,9 @@
                     return;
                 }
 
+                // Clean up previous object URLs
+                cleanupObjectUrls();
+
                 showProgress();
                 showToast('info', 'Processing PDF', `Starting conversion of "${file.name}"...`);
 
@@ -569,9 +580,17 @@
                             
                             await page.render(renderContext).promise;
                             
-                            // Convert to PNG data URL with high quality
-                            const imgPreview = document.getElementById(`preview-${i}`);
-                            imgPreview.src = canvas.toDataURL('image/png', 1.0);
+                            // Convert to Blob and Object URL (Performance optimization over data URL)
+                            await new Promise(resolve => {
+                                canvas.toBlob((blob) => {
+                                    const url = URL.createObjectURL(blob);
+                                    pageObjectUrls.push(url);
+
+                                    const imgPreview = document.getElementById(`preview-${i}`);
+                                    imgPreview.src = url;
+                                    resolve();
+                                }, 'image/png', 1.0);
+                            });
                             
                             // Hide placeholder
                             const placeholder = document.querySelector(`#content-${i} .placeholder`);
