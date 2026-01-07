@@ -151,6 +151,14 @@
             // Reference image URL (local copy)
             const referenceImageUrl = '/assets/reference-back-side.jpg';
             
+            // Track Object URLs to prevent memory leaks
+            const pageObjectUrls = [];
+
+            function cleanupObjectUrls() {
+                pageObjectUrls.forEach(url => URL.revokeObjectURL(url));
+                pageObjectUrls.length = 0;
+            }
+
             // Toast Notification System
             const MAX_TOASTS = 3; // Maximum number of visible toasts
             
@@ -521,6 +529,9 @@
                     return;
                 }
 
+                // Clean up previous Object URLs
+                cleanupObjectUrls();
+
                 showProgress();
                 showToast('info', 'Processing PDF', `Starting conversion of "${file.name}"...`);
 
@@ -569,9 +580,17 @@
                             
                             await page.render(renderContext).promise;
                             
-                            // Convert to PNG data URL with high quality
+                            // Convert to Blob URL for better performance and lower memory usage
                             const imgPreview = document.getElementById(`preview-${i}`);
-                            imgPreview.src = canvas.toDataURL('image/png', 1.0);
+
+                            await new Promise(resolve => {
+                                canvas.toBlob(blob => {
+                                    const objectUrl = URL.createObjectURL(blob);
+                                    pageObjectUrls.push(objectUrl);
+                                    imgPreview.src = objectUrl;
+                                    resolve();
+                                }, 'image/png', 1.0);
+                            });
                             
                             // Hide placeholder
                             const placeholder = document.querySelector(`#content-${i} .placeholder`);

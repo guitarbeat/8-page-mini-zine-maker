@@ -1,0 +1,3 @@
+## 2024-05-23 - [Canvas Blob Optimization]
+**Learning:** Replacing `canvas.toDataURL()` with `canvas.toBlob()` + `URL.createObjectURL()` significantly reduces main-thread blocking and memory usage when processing multiple high-resolution images. However, `URL.createObjectURL` requires explicit manual memory management (`URL.revokeObjectURL`) to prevent memory leaks, unlike Base64 strings which are garbage collected automatically.
+**Action:** When working with canvas-generated images, always prefer `toBlob` for performance, but pair it with a robust cleanup mechanism (e.g., tracking array and cleanup function) that runs before generating new batches of images.
