@@ -1,3 +1,3 @@
-## 2026-01-08 - Canvas Serialization Performance
-**Learning:** `canvas.toBlob()` combined with `URL.createObjectURL()` is significantly more memory-efficient than `canvas.toDataURL()` for high-resolution images, avoiding the 33% overhead of Base64 strings.
-**Action:** Use `toBlob` for generating preview images in memory-intensive applications, but ensure to manage object URL cleanup with `URL.revokeObjectURL()` to prevent memory leaks.
+## 2024-03-24 - [Duplicate Script Execution and Defer Race Conditions]
+**Learning:** Found a critical bug where application logic was duplicated in both an inline script and `assets/app.js`, causing event listeners (like "Print") to fire twice. Removing the duplicate file fixed this. Also learned that adding `defer` to CDN scripts changes the execution order: inline scripts run *before* deferred scripts. This caused `pdfjsLib` to be undefined when the inline script tried to configure it immediately.
+**Action:** Always check for duplicate script inclusions in legacy projects. When optimizing with `defer`, ensure that any inline code relying on deferred libraries is wrapped in `DOMContentLoaded` or checks for the library's existence before use.
