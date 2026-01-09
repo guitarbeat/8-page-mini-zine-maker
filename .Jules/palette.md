@@ -1,3 +1,3 @@
-## 2024-02-14 - [Toast & Shortcut Accessibility]
-**Learning:** Toast notifications often lack `aria-live` regions and labeled close buttons, making them invisible or unusable for screen reader users. Additionally, keyboard shortcuts (Ctrl+O, etc.) are often undocumented for non-visual users.
-**Action:** Always add `aria-live="polite"` (or `assertive`) to toast containers and ensure icon-only close buttons have `aria-label`. Expose keyboard shortcuts via `title` (e.g., "Action (Key)") and `aria-keyshortcuts` for full accessibility.
+## 2024-05-22 - [Slider Interaction & Accessibility]
+**Learning:** Standard HTML range inputs are accessible but lack "quick set" functionality. Adding clickable ticks and value displays significantly improves usability for both mouse and keyboard users, provided they are marked up with `role="button"`, `tabindex="0"`, and proper `keydown` handlers. Also, `aria-valuetext` is crucial for screen readers to announce units (e.g., "100 percent" instead of just "100").
+**Action:** When implementing sliders with discrete important values (like zoom levels), always add interactive, accessible tick marks or preset buttons. Ensure the current value display is also an interactive reset button.

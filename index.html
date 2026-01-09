@@ -89,13 +89,13 @@
                 <div>
                     <div class="slider-label">
                         <label for="scale-slider">Scale</label>
-                        <span id="scale-value" class="slider-value">100%</span>
+                        <span id="scale-value" class="slider-value" title="Click to reset" style="cursor: pointer" role="button" tabindex="0" aria-label="Reset scale to 100%">100%</span>
                     </div>
-                    <input type="range" id="scale-slider" min="50" max="200" value="100" class="slider">
+                    <input type="range" id="scale-slider" min="50" max="200" value="100" class="slider" aria-valuemin="50" aria-valuemax="200" aria-valuenow="100" aria-valuetext="100%">
                     <div class="slider-ticks">
-                        <span>50%</span>
-                        <span>100%</span>
-                        <span>200%</span>
+                        <span data-scale="50" style="cursor: pointer" role="button" tabindex="0" aria-label="Set scale to 50%">50%</span>
+                        <span data-scale="100" style="cursor: pointer" role="button" tabindex="0" aria-label="Set scale to 100%">100%</span>
+                        <span data-scale="200" style="cursor: pointer" role="button" tabindex="0" aria-label="Set scale to 200%">200%</span>
                     </div>
                 </div>
             </div>
@@ -326,6 +326,10 @@
                 scaleValue.textContent = scale + '%';
                 scaleSlider.value = scale;
                 
+                // Update ARIA attributes
+                scaleSlider.setAttribute('aria-valuenow', scale);
+                scaleSlider.setAttribute('aria-valuetext', scale + '%');
+
                 // Update zine container scale
                 zine.classList.add('scaled');
                 zine.style.transform = `scale(${scale / 100})`;
@@ -844,6 +848,29 @@
             // Scaling control event listeners
             scaleSlider.addEventListener('input', (e) => {
                 updateScale(parseInt(e.target.value));
+            });
+
+            // Reset scale on value click
+            scaleValue.addEventListener('click', () => updateScale(100));
+            scaleValue.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    updateScale(100);
+                }
+            });
+
+            // Scale ticks interaction
+            document.querySelectorAll('.slider-ticks span').forEach(tick => {
+                const scale = parseInt(tick.getAttribute('data-scale'));
+
+                tick.addEventListener('click', () => updateScale(scale));
+
+                tick.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        updateScale(scale);
+                    }
+                });
             });
             
             // Initialize with default values
