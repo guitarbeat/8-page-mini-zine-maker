@@ -325,6 +325,7 @@
                 currentScale = scale;
                 scaleValue.textContent = scale + '%';
                 scaleSlider.value = scale;
+                scaleSlider.setAttribute('aria-valuetext', scale + '%');
                 
                 // Update zine container scale
                 zine.classList.add('scaled');

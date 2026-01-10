@@ -125,6 +125,24 @@
     box-sizing: border-box;
 }
 
+/* Accessibility: Focus Indicators
+   ========================================================================== */
+:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+/* Ensure focus is visible on buttons and interactive elements even if they have custom styles */
+.btn:focus-visible,
+.upload-zone:focus-visible,
+.slider:focus-visible,
+.theme-toggle:focus-visible,
+.toast-close:focus-visible,
+a:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
 html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
