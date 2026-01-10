@@ -551,30 +551,26 @@
                         for (let i = 1; i <= maxPages; i++) {
                             const page = await pdf.getPage(i);
                             
-                            // Use higher scale for better quality and HiDPI support
-                            const scale = 2.5;
+                            // Use fixed scale for consistent print quality (~216 DPI) and performance
+                            // Optimization: We decouple this from devicePixelRatio to prevent massive
+                            // memory usage on high-DPI mobile devices (which would otherwise render at 7.5x scale)
+                            const scale = 3.0;
                             const viewport = page.getViewport({ scale: scale });
-                            
-                            // Support HiDPI screens
-                            const outputScale = window.devicePixelRatio || 1;
                             
                             // Create canvas with proper dimensions
                             const canvas = document.createElement('canvas');
                             const context = canvas.getContext('2d');
                             
-                            // Set canvas dimensions for HiDPI
-                            canvas.width = Math.floor(viewport.width * outputScale);
-                            canvas.height = Math.floor(viewport.height * outputScale);
+                            // Set canvas dimensions matching the fixed scale
+                            canvas.width = Math.floor(viewport.width);
+                            canvas.height = Math.floor(viewport.height);
+                            // Display size matches the viewport (CSS handles actual responsiveness)
                             canvas.style.width = Math.floor(viewport.width) + "px";
                             canvas.style.height = Math.floor(viewport.height) + "px";
-
-                            // Set up transform for HiDPI
-                            const transform = outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null;
 
                             // Render page to canvas with proper context
                             const renderContext = {
                                 canvasContext: context,
-                                transform: transform,
                                 viewport: viewport
                             };
                             
