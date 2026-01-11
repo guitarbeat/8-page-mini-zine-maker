@@ -1,30 +1,52 @@
-// Set worker source for pdf.js (guard if available)
-if (window.pdfjsLib && pdfjsLib.GlobalWorkerOptions) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js`;
-}
+// PDF.js initialization will be handled in DOMContentLoaded
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Basic library guards
-    if (!window.pdfjsLib) {
-        console.error('pdfjsLib is not available.');
+    // Initialize PDF.js worker
+    if (window.pdfjsLib && pdfjsLib.GlobalWorkerOptions) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
     }
-    if (!window.jspdf) {
-        console.error('jsPDF is not available.');
-    }
-    if (!window.html2canvas) {
-        console.error('html2canvas is not available.');
+
+    // Library availability checks
+    const libraries = {
+        'PDF.js': window.pdfjsLib,
+        'jsPDF': window.jspdf,
+        'html2canvas': window.html2canvas
+    };
+
+    const missingLibraries = Object.entries(libraries).filter(([name, lib]) => !lib).map(([name]) => name);
+
+    if (missingLibraries.length > 0) {
+        console.warn('Libraries not yet loaded:', missingLibraries.join(', '));
+        uploadStatus.textContent = `Loading required libraries... Please wait.`;
+        uploadStatus.classList.add('text-blue-600', 'font-bold');
+
+        // Wait a bit for libraries to load and try again
+        setTimeout(() => {
+            const stillMissing = Object.entries(libraries).filter(([name, lib]) => !lib).map(([name]) => name);
+            if (stillMissing.length > 0) {
+                uploadStatus.textContent = `Error: Failed to load required libraries (${stillMissing.join(', ')}). Please check your internet connection and refresh the page.`;
+                uploadStatus.classList.add('text-red-500');
+                uploadStatus.classList.remove('text-blue-600');
+            } else {
+                uploadStatus.textContent = 'Ready to upload PDF files.';
+                uploadStatus.classList.remove('text-red-500', 'text-blue-600', 'font-bold');
+            }
+        }, 3000);
+    } else {
+        uploadStatus.textContent = 'Ready to upload PDF files.';
+        uploadStatus.classList.remove('text-red-500', 'text-blue-600', 'font-bold');
     }
     const zine = document.querySelector('.zine');
     const printBtn = document.getElementById('printBtn');
     const exportPdfBtn = document.getElementById('exportPdfBtn');
     const pdfUpload = document.getElementById('pdf-upload');
-    const uploadText = document.getElementById('upload-text');
     const uploadStatus = document.getElementById('upload-status');
+    const uploadZone = document.getElementById('upload-zone');
     const themeToggle = document.getElementById('themeToggle');
     const themeIcon = document.getElementById('themeIcon');
 
     // Reference image URL (local copy)
-    const referenceImageUrl = '/assets/reference-back-side.jpg';
+    const referenceImageUrl = 'assets/reference-back-side.jpg';
 
     // Night mode functionality
     let isDarkMode = localStorage.getItem('theme') === 'dark' ||
@@ -52,6 +74,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Theme toggle event listener
     themeToggle.addEventListener('click', toggleTheme);
+
+    // Upload zone click handler
+    uploadZone.addEventListener('click', () => {
+        pdfUpload.click();
+    });
 
     // Scaling controls
     const scaleSlider = document.getElementById('scale-slider');
@@ -123,6 +150,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to create two-page print layout (front + back)
     function createTwoPagePrintLayout() {
         const printWindow = window.open('', '_blank');
+
+        // Check if popup was blocked
+        if (!printWindow) {
+            showToast('error', 'Popup Blocked', 'Please allow popups for this site to enable printing. You can also try the Export PDF feature instead.');
+            return;
+        }
+
         const zineContent = zine.outerHTML;
 
         const printHTML = `
@@ -182,25 +216,74 @@ document.addEventListener('DOMContentLoaded', () => {
     // PDF upload handler with improved image conversion
     pdfUpload.addEventListener('change', async (event) => {
         const file = event.target.files[0];
-        if (!file || file.type !== 'application/pdf') {
-            uploadStatus.textContent = 'Please select a PDF file.';
+
+        if (!file) {
+            uploadStatus.textContent = 'No file selected.';
             return;
         }
 
-        uploadText.textContent = 'Processing...';
+        if (file.type !== 'application/pdf') {
+            uploadStatus.classList.add('text-red-500', 'font-bold');
+            uploadStatus.textContent = 'Error: Please select a PDF file (.pdf extension).';
+            return;
+        }
+
+        // Check file size (limit to 50MB to prevent memory issues)
+        const maxSize = 50 * 1024 * 1024; // 50MB
+        if (file.size > maxSize) {
+            uploadStatus.classList.add('text-red-500', 'font-bold');
+            uploadStatus.textContent = 'Error: PDF file is too large (max 50MB). Please choose a smaller file.';
+            return;
+        }
+
+        if (file.size === 0) {
+            uploadStatus.classList.add('text-red-500', 'font-bold');
+            uploadStatus.textContent = 'Error: PDF file appears to be empty.';
+            return;
+        }
+
+        // Reset status and start processing
         uploadStatus.classList.remove('text-red-500', 'font-bold');
-        uploadStatus.textContent = `Processing "${file.name}"...`;
+        uploadStatus.textContent = `Processing "${file.name}" (${(file.size / 1024 / 1024).toFixed(1)}MB)...`;
 
         const fileReader = new FileReader();
+
+        fileReader.onerror = function() {
+            uploadStatus.classList.add('text-red-500', 'font-bold');
+            uploadStatus.textContent = 'Error: Failed to read the PDF file. The file may be corrupted or inaccessible.';
+        };
+
+        fileReader.onabort = function() {
+            uploadStatus.classList.add('text-red-500', 'font-bold');
+            uploadStatus.textContent = 'File reading was cancelled.';
+        };
+
         fileReader.onload = async function() {
-            const typedarray = new Uint8Array(this.result);
             try {
+                uploadStatus.textContent = 'Reading PDF file... This may take a moment for large files.';
+
+                const typedarray = new Uint8Array(this.result);
+
                 if (!window.pdfjsLib) {
-                    throw new Error('PDF engine not loaded');
+                    throw new Error('PDF.js library is not loaded. Please refresh the page and try again.');
                 }
-                const pdf = await pdfjsLib.getDocument(typedarray).promise;
+
+                uploadStatus.textContent = 'Processing PDF...';
+
+                // Add timeout to PDF loading
+                const loadingPromise = pdfjsLib.getDocument(typedarray).promise;
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('PDF loading timed out. The file may be corrupted or too large.')), 30000)
+                );
+
+                const pdf = await Promise.race([loadingPromise, timeoutPromise]);
                 const numPages = pdf.numPages;
-                uploadStatus.textContent = `PDF has ${numPages} pages. Converting to images...`;
+
+                if (numPages === 0) {
+                    throw new Error('PDF appears to be empty or corrupted.');
+                }
+
+                uploadStatus.textContent = `PDF loaded with ${numPages} pages. Converting to images...`;
 
                 const maxPages = Math.min(8, numPages);
                 let fallbackWidth = 1000;
@@ -298,7 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Reference image will be added to back side during print/export
 
-                uploadText.textContent = 'Upload New PDF';
+                // Upload text handled by status updates
                 const blanksAdded = 8 - maxPages;
                 uploadStatus.textContent = blanksAdded > 0
                     ? `Converted ${maxPages} page(s). Filled ${blanksAdded} blank page(s). Ready to print!`
@@ -307,9 +390,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
             } catch (error) {
                 console.error('Error processing PDF:', error);
+
+                let errorMessage = 'Error: Could not process this PDF. ';
+
+                if (error.message.includes('timed out')) {
+                    errorMessage += 'The file took too long to load. It may be corrupted or too large.';
+                } else if (error.message.includes('corrupted')) {
+                    errorMessage += 'The file appears to be corrupted.';
+                } else if (error.message.includes('protected')) {
+                    errorMessage += 'The file may be password-protected or have security restrictions.';
+                } else if (error.message.includes('not loaded')) {
+                    errorMessage += 'PDF.js library failed to load. Please refresh the page.';
+                } else if (error.message.includes('InvalidPDFException')) {
+                    errorMessage += 'The file is not a valid PDF or is corrupted.';
+                } else if (error.message.includes('MissingPDFException')) {
+                    errorMessage += 'The PDF file appears to be empty or incomplete.';
+                } else {
+                    errorMessage += error.message || 'Unknown error occurred.';
+                }
+
                 uploadStatus.classList.add('text-red-500', 'font-bold');
-                uploadStatus.textContent = 'Error: Could not process this PDF. It may be corrupted or protected.';
-                uploadText.textContent = 'Try a Different PDF';
+                uploadStatus.textContent = errorMessage;
             }
         };
         fileReader.readAsArrayBuffer(file);
