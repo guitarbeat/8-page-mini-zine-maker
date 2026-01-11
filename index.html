@@ -129,7 +129,6 @@
         </div>
     </div>
 
-    <script src="/assets/app.js"></script>
     <script>
         // Set worker source for pdf.js
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js`;
@@ -349,6 +348,8 @@
             // Generate the 8 blank page placeholders
             for (let i = 1; i <= 8; i++) {
                 const page = document.createElement('article');
+                page.className = 'fade-in-up';
+                page.style.animationDelay = `${i * 0.1}s`;
                 
                 const content = document.createElement('div');
                 content.className = 'page-content';
