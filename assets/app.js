@@ -1,6 +1,6 @@
 // PDF.js initialization will be handled in DOMContentLoaded
 
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
     // Initialize PDF.js worker
     if (window.pdfjsLib && pdfjsLib.GlobalWorkerOptions) {
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -12,6 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
         'jsPDF': window.jspdf,
         'html2canvas': window.html2canvas
     };
+
+    const zine = document.querySelector('.zine');
+    const printBtn = document.getElementById('printBtn');
+    const exportPdfBtn = document.getElementById('exportPdfBtn');
+    const pdfUpload = document.getElementById('pdf-upload');
+    const uploadStatus = document.getElementById('upload-status');
+    const uploadZone = document.getElementById('upload-zone');
+    const themeToggle = document.getElementById('themeToggle');
 
     const missingLibraries = Object.entries(libraries).filter(([name, lib]) => !lib).map(([name]) => name);
 
@@ -36,13 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadStatus.textContent = 'Ready to upload PDF files.';
         uploadStatus.classList.remove('text-red-500', 'text-blue-600', 'font-bold');
     }
-    const zine = document.querySelector('.zine');
-    const printBtn = document.getElementById('printBtn');
-    const exportPdfBtn = document.getElementById('exportPdfBtn');
-    const pdfUpload = document.getElementById('pdf-upload');
-    const uploadStatus = document.getElementById('upload-status');
-    const uploadZone = document.getElementById('upload-zone');
-    const themeToggle = document.getElementById('themeToggle');
     const themeIcon = document.getElementById('themeIcon');
 
     // Reference image URL (local copy)
@@ -566,11 +567,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 uploadStatus.textContent = `PDF exported successfully as ${filename}`;
                 uploadStatus.classList.remove('text-red-500', 'text-green-600', 'font-bold');
                 uploadStatus.classList.add('text-green-600', 'font-bold');
+
+                showToast('success', 'Export Complete', `Your zine has been exported as ${filename}`);
             };
             referenceImg.src = referenceImageUrl;
 
         } catch (error) {
             console.error('Error exporting PDF:', error);
+            showToast('error', 'Export Failed', error.message || 'Could not export PDF');
             exportPdfBtn.disabled = false;
             exportPdfBtn.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -596,5 +600,87 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize with default values
     updateScale(100);
-});
+
+    // Toast Notification System
+    window.showToast = function(type, title, message) {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+
+        // Icons based on type
+        let iconHtml = '';
+        if (type === 'success') {
+            iconHtml = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-success"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+        } else if (type === 'error') {
+            iconHtml = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-error"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+        } else if (type === 'warning') {
+            iconHtml = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-warning"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+        } else {
+            iconHtml = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-info"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+        }
+
+        // Use textContent for title and message to prevent XSS
+        const toastIconDiv = document.createElement('div');
+        toastIconDiv.className = 'toast-icon';
+        toastIconDiv.innerHTML = iconHtml;
+
+        const toastContentDiv = document.createElement('div');
+        toastContentDiv.className = 'toast-content';
+
+        const toastTitleDiv = document.createElement('div');
+        toastTitleDiv.className = 'toast-title';
+        toastTitleDiv.textContent = title;
+
+        const toastMessageDiv = document.createElement('div');
+        toastMessageDiv.className = 'toast-message';
+        toastMessageDiv.textContent = message;
+
+        toastContentDiv.appendChild(toastTitleDiv);
+        toastContentDiv.appendChild(toastMessageDiv);
+
+        const closeButton = document.createElement('button');
+        closeButton.className = 'toast-close';
+        closeButton.setAttribute('aria-label', 'Close notification');
+        closeButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+
+        toast.appendChild(toastIconDiv);
+        toast.appendChild(toastContentDiv);
+        toast.appendChild(closeButton);
+
+        container.appendChild(toast);
+
+        // Close button handler
+        const closeBtn = toast.querySelector('.toast-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (toast.parentElement) toast.remove();
+                }, 300);
+            });
+        }
+
+        // Auto remove
+        requestAnimationFrame(() => {
+            toast.classList.add('show');
+        });
+
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (toast.parentElement) toast.remove();
+                }, 300);
+            }
+        }, 5000);
+    };
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}
 
