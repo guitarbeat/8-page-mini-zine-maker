@@ -1,6 +1,15 @@
 // PDF.js initialization will be handled in DOMContentLoaded
 
 document.addEventListener('DOMContentLoaded', () => {
+    const zine = document.querySelector('.zine');
+    const printBtn = document.getElementById('printBtn');
+    const exportPdfBtn = document.getElementById('exportPdfBtn');
+    const pdfUpload = document.getElementById('pdf-upload');
+    const uploadStatus = document.getElementById('upload-status');
+    const uploadZone = document.getElementById('upload-zone');
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+
     // Initialize PDF.js worker
     if (window.pdfjsLib && pdfjsLib.GlobalWorkerOptions) {
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -17,36 +26,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (missingLibraries.length > 0) {
         console.warn('Libraries not yet loaded:', missingLibraries.join(', '));
-        uploadStatus.textContent = `Loading required libraries... Please wait.`;
-        uploadStatus.classList.add('text-blue-600', 'font-bold');
+        if (uploadStatus) {
+            uploadStatus.textContent = `Loading required libraries... Please wait.`;
+            uploadStatus.classList.add('text-blue-600', 'font-bold');
+        }
 
         // Wait a bit for libraries to load and try again
         setTimeout(() => {
             const stillMissing = Object.entries(libraries).filter(([name, lib]) => !lib).map(([name]) => name);
             if (stillMissing.length > 0) {
-                uploadStatus.textContent = `Error: Failed to load required libraries (${stillMissing.join(', ')}). Please check your internet connection and refresh the page.`;
-                uploadStatus.classList.add('text-red-500');
-                uploadStatus.classList.remove('text-blue-600');
+                if (uploadStatus) {
+                    uploadStatus.textContent = `Error: Failed to load required libraries (${stillMissing.join(', ')}). Please check your internet connection and refresh the page.`;
+                    uploadStatus.classList.add('text-red-500');
+                    uploadStatus.classList.remove('text-blue-600');
+                }
             } else {
-                uploadStatus.textContent = 'Ready to upload PDF files.';
-                uploadStatus.classList.remove('text-red-500', 'text-blue-600', 'font-bold');
+                if (uploadStatus) {
+                    uploadStatus.textContent = 'Ready to upload PDF files.';
+                    uploadStatus.classList.remove('text-red-500', 'text-blue-600', 'font-bold');
+                }
             }
         }, 3000);
     } else {
-        uploadStatus.textContent = 'Ready to upload PDF files.';
-        uploadStatus.classList.remove('text-red-500', 'text-blue-600', 'font-bold');
+        if (uploadStatus) {
+            uploadStatus.textContent = 'Ready to upload PDF files.';
+            uploadStatus.classList.remove('text-red-500', 'text-blue-600', 'font-bold');
+        }
     }
-    const zine = document.querySelector('.zine');
-    const printBtn = document.getElementById('printBtn');
-    const exportPdfBtn = document.getElementById('exportPdfBtn');
-    const pdfUpload = document.getElementById('pdf-upload');
-    const uploadStatus = document.getElementById('upload-status');
-    const uploadZone = document.getElementById('upload-zone');
-    const themeToggle = document.getElementById('themeToggle');
-    const themeIcon = document.getElementById('themeIcon');
 
     // Reference image URL (local copy)
     const referenceImageUrl = 'assets/reference-back-side.jpg';
+
+    // Track object URLs to prevent memory leaks
+    const pageObjectUrls = [];
+
+    function cleanupObjectUrls() {
+        pageObjectUrls.forEach(url => URL.revokeObjectURL(url));
+        pageObjectUrls.length = 0;
+    }
 
     // Night mode functionality
     let isDarkMode = localStorage.getItem('theme') === 'dark' ||
@@ -243,6 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Reset status and start processing
+        cleanupObjectUrls();
         uploadStatus.classList.remove('text-red-500', 'font-bold');
         uploadStatus.textContent = `Processing "${file.name}" (${(file.size / 1024 / 1024).toFixed(1)}MB)...`;
 
@@ -325,21 +343,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         await page.render(renderContext).promise;
 
-                        // Convert to PNG data URL with high quality
+                        // Convert to Blob URL for better performance and memory efficiency
                         const imgPreview = document.getElementById(`preview-${i}`);
                         if (imgPreview) {
-                            imgPreview.src = canvas.toDataURL('image/png', 1.0);
-                            imgPreview.classList.add('scale-in');
-                        }
+                            canvas.toBlob((blob) => {
+                                const url = URL.createObjectURL(blob);
+                                pageObjectUrls.push(url);
+                                imgPreview.src = url;
+                                imgPreview.classList.add('scale-in');
 
-                        // Hide placeholder with animation
-                        const placeholder = document.querySelector(`#content-${i} .placeholder`);
-                        if (placeholder) {
-                            placeholder.style.transition = 'opacity 0.3s ease';
-                            placeholder.style.opacity = '0';
-                            setTimeout(() => {
-                                placeholder.style.display = 'none';
-                            }, 300);
+                                // Hide placeholder with animation after image is ready
+                                const placeholder = document.querySelector(`#content-${i} .placeholder`);
+                                if (placeholder) {
+                                    placeholder.style.transition = 'opacity 0.3s ease';
+                                    placeholder.style.opacity = '0';
+                                    setTimeout(() => {
+                                        placeholder.style.display = 'none';
+                                    }, 300);
+                                }
+                            }, 'image/png', 1.0);
                         }
 
                         // Update status
