@@ -1,25 +1,42 @@
-# 8-Page Mini Zine Maker
+# PDF Zine Maker
 
-A web application that converts PDF files into printable 8-page mini zines with proper folding and cutting instructions.
+A modern, progressive web application that converts PDF files into printable 8-page mini zines with proper folding and cutting instructions. Built with modern JavaScript, ES6 modules, and optimized for performance.
 
 ## Features
 
-- **PDF Upload**: Upload any PDF file (up to 8 pages)
-- **Automatic Conversion**: Converts PDF pages to high-quality images
+- **Modern UI**: Clean, responsive design with dark/light mode support
+- **Drag & Drop**: Drag PDF files directly onto the upload area
+- **PDF Upload**: Upload any PDF file (up to 8 pages, 50MB max)
+- **Real-time Preview**: See your zine layout update as pages are processed
+- **Progress Feedback**: Visual progress indicators and toast notifications
+- **Automatic Conversion**: High-quality PDF rendering with HiDPI support
 - **Correct Layout**: Proper 8-page mini zine arrangement for printing
-- **Live Preview**: See exactly how your zine will look before printing
 - **Print Ready**: Optimized for A4 landscape printing
 - **PDF Export**: Download the assembled zine layout as a PDF file
 - **Folding Guide**: Visual cut line shows where to fold and cut
+- **Keyboard Shortcuts**: Ctrl+O (upload), Ctrl+P (print), Ctrl+S (export)
+- **PWA Ready**: Installable as a progressive web app
+- **Offline Capable**: Service worker for offline functionality
 
 ## How to Use
 
-1. **Upload PDF**: Click "Choose PDF File" and select your PDF
-2. **Preview**: See your zine layout with pages arranged correctly
-3. **Print or Export**: 
-   - Click "Print Zine" to print on A4 landscape paper
-   - Click "Export PDF" to download the zine layout as a PDF file
-4. **Fold & Cut**: Follow the dashed line to fold and cut your zine
+1. **Upload PDF**:
+   - Drag and drop a PDF file onto the upload area, or
+   - Click the upload area or "browse files" link, or
+   - Press Ctrl+O to open the file picker
+2. **Preview**: Watch as your PDF pages are converted and arranged in the correct zine layout
+3. **Adjust Scale**: Use the scale slider to adjust the size (50%-200%) for optimal printing
+4. **Print or Export**:
+   - Click "Print Zine" (Ctrl+P) to print on A4 landscape paper
+   - Click "Export PDF" (Ctrl+S) to download the zine layout as a PDF file
+5. **Fold & Cut**: Follow the dashed line to fold and cut your zine
+
+## Keyboard Shortcuts
+
+- **Ctrl+O**: Open file picker
+- **Ctrl+P**: Print zine
+- **Ctrl+S**: Export PDF
+- **Space**: Toggle dark/light mode
 
 ## 8-Page Mini Zine Layout
 
@@ -45,12 +62,61 @@ Page 6 | Page 3 | Page 4 | Page 5
 
 ## Technical Details
 
-- **PDF.js**: For high-quality PDF rendering
-- **jsPDF**: For PDF generation and export
-- **html2canvas**: For capturing the zine layout as an image
-- **Tailwind CSS**: For responsive design
-- **CSS Grid**: For precise page layout
+### Architecture
+- **ES6 Modules**: Modern JavaScript with import/export
+- **Class-based**: Object-oriented design with dedicated classes
+- **Progressive Enhancement**: Works with or without JavaScript
+- **PWA Features**: Service worker, web app manifest, installable
+
+### Libraries
+- **PDF.js**: High-quality PDF rendering and processing
+- **jsPDF**: PDF generation and export functionality
+- **html2canvas**: DOM-to-canvas conversion for PDF export
+- **Vite**: Fast development server and build tool
+- **ESLint**: Code quality and consistency
+
+### Features
+- **CSS Grid & Flexbox**: Modern layout system
+- **CSS Custom Properties**: Dynamic theming and responsive design
 - **HiDPI Support**: Optimized for high-resolution displays
+- **Accessibility**: ARIA labels, keyboard navigation, screen reader support
+- **Performance**: Lazy loading, memory management, optimized rendering
+
+## Development
+
+### Prerequisites
+- Node.js 18+ and npm
+- Modern web browser with ES6 module support
+
+### Setup
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+### Project Structure
+```
+src/
+├── js/
+│   ├── app.js           # Main application entry point
+│   ├── pdf-processor.js # PDF processing logic
+│   ├── ui-manager.js    # UI interaction management
+│   ├── toast.js         # Notification system
+│   └── utils.js         # Utility functions
+├── css/
+│   └── styles.css       # Application styles
+└── assets/
+    └── reference-back-side.jpg # Folding reference image
+```
 
 ## Browser Support
 

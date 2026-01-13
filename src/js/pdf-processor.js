@@ -1,0 +1,237 @@
+// Modern PDF processing class
+
+import { toast } from './toast.js';
+import { formatFileSize, delay } from './utils.js';
+
+export class PDFProcessor {
+  constructor() {
+    this.pdf = null;
+    this.isProcessing = false;
+  }
+
+  /**
+   * Initialize PDF.js worker
+   */
+  async initialize() {
+    if (typeof pdfjsLib !== 'undefined' && pdfjsLib.GlobalWorkerOptions) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+        'pdfjs-dist/build/pdf.worker.min.js',
+        import.meta.url
+      ).toString();
+    }
+  }
+
+  /**
+   * Validate PDF file
+   * @param {File} file - PDF file to validate
+   * @returns {Object} Validation result
+   */
+  validateFile(file) {
+    const errors = [];
+
+    if (!file) {
+      errors.push('No file selected');
+      return { valid: false, errors };
+    }
+
+    if (file.type !== 'application/pdf') {
+      errors.push('Please select a PDF file');
+    }
+
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+      errors.push(`File too large (${formatFileSize(file.size)}). Maximum size is ${formatFileSize(maxSize)}`);
+    }
+
+    if (file.size === 0) {
+      errors.push('File appears to be empty');
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors
+    };
+  }
+
+  /**
+   * Load PDF from file
+   * @param {File} file - PDF file to load
+   * @param {Function} onProgress - Progress callback
+   * @returns {Promise<Object>} PDF loading result
+   */
+  async loadPDF(file, onProgress = null) {
+    if (this.isProcessing) {
+      throw new Error('PDF processing already in progress');
+    }
+
+    this.isProcessing = true;
+
+    try {
+      const validation = this.validateFile(file);
+      if (!validation.valid) {
+        throw new Error(validation.errors.join('. '));
+      }
+
+      onProgress?.('Reading PDF file...');
+
+      const arrayBuffer = await this.readFileAsArrayBuffer(file);
+
+      onProgress?.('Processing PDF...');
+
+      // Add timeout to PDF loading
+      const loadingPromise = pdfjsLib.getDocument({
+        data: arrayBuffer,
+        verbosity: 0 // Reduce console output
+      }).promise;
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('PDF loading timed out')), 30000)
+      );
+
+      this.pdf = await Promise.race([loadingPromise, timeoutPromise]);
+
+      const numPages = this.pdf.numPages;
+
+      if (numPages === 0) {
+        throw new Error('PDF appears to be empty or corrupted');
+      }
+
+      return {
+        pdf: this.pdf,
+        numPages,
+        fileName: file.name,
+        fileSize: file.size
+      };
+
+    } catch (error) {
+      console.error('PDF loading error:', error);
+      throw this.handlePDFError(error);
+    } finally {
+      this.isProcessing = false;
+    }
+  }
+
+  /**
+   * Read file as ArrayBuffer
+   * @param {File} file - File to read
+   * @returns {Promise<ArrayBuffer>} File contents
+   */
+  readFileAsArrayBuffer(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.onabort = () => reject(new Error('File reading was cancelled'));
+
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  /**
+   * Render PDF page to canvas
+   * @param {number} pageNum - Page number to render
+   * @param {Function} onProgress - Progress callback
+   * @returns {Promise<HTMLCanvasElement>} Rendered canvas
+   */
+  async renderPage(pageNum, onProgress = null) {
+    if (!this.pdf) {
+      throw new Error('No PDF loaded');
+    }
+
+    try {
+      onProgress?.(`Rendering page ${pageNum}...`);
+
+      const page = await this.pdf.getPage(pageNum);
+      // Reduced scale for better performance and smaller data URLs
+      const scale = 1.5; // Balanced quality vs performance
+      const viewport = page.getViewport({ scale });
+
+      // Create canvas with proper dimensions
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d', { alpha: false });
+
+      // Use viewport dimensions directly for better compatibility
+      canvas.width = Math.floor(viewport.width);
+      canvas.height = Math.floor(viewport.height);
+
+      // Fill background white
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Render page to canvas
+      const renderContext = {
+        canvasContext: context,
+        viewport: viewport,
+        background: 'white'
+      };
+
+      await page.render(renderContext).promise;
+
+      console.log(`Rendered page ${pageNum}, canvas size: ${canvas.width}x${canvas.height}`);
+      return canvas;
+
+    } catch (error) {
+      console.error(`Failed to render page ${pageNum}:`, error);
+      throw new Error(`Failed to render page ${pageNum}`);
+    }
+  }
+
+  /**
+   * Convert canvas to data URL
+   * @param {HTMLCanvasElement} canvas - Canvas to convert
+   * @param {string} format - Image format ('image/png' or 'image/jpeg')
+   * @param {number} quality - Image quality (0-1, only for JPEG)
+   * @returns {string} Data URL
+   */
+  canvasToDataURL(canvas, format = 'image/jpeg', quality = 0.85) {
+    try {
+      // Use JPEG for smaller file sizes, PNG as fallback
+      const dataUrl = canvas.toDataURL(format, quality);
+      console.log(`Generated data URL, format: ${format}, size: ${dataUrl.length} chars`);
+      return dataUrl;
+    } catch (error) {
+      console.warn(`Failed to generate ${format}, falling back to PNG:`, error);
+      // Fallback to PNG if JPEG fails
+      return canvas.toDataURL('image/png', 1.0);
+    }
+  }
+
+  /**
+   * Handle PDF-specific errors
+   * @param {Error} error - Original error
+   * @returns {Error} Processed error
+   */
+  handlePDFError(error) {
+    const message = error.message || 'Unknown error';
+
+    if (message.includes('timed out')) {
+      return new Error('PDF loading timed out. The file may be corrupted or too large.');
+    }
+
+    if (message.includes('corrupted') || message.includes('InvalidPDFException')) {
+      return new Error('The PDF file appears to be corrupted or invalid.');
+    }
+
+    if (message.includes('password') || message.includes('protected')) {
+      return new Error('The PDF file is password-protected.');
+    }
+
+    if (message.includes('not loaded') || message.includes('MissingPDFException')) {
+      return new Error('PDF.js library failed to load. Please refresh the page.');
+    }
+
+    return new Error(`PDF processing failed: ${message}`);
+  }
+
+  /**
+   * Clean up resources
+   */
+  cleanup() {
+    if (this.pdf) {
+      this.pdf.destroy();
+      this.pdf = null;
+    }
+    this.isProcessing = false;
+  }
+}

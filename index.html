@@ -3,123 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF to Zine Maker</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/styles.css">
+    <meta name="description" content="Convert PDFs into printable 8-page zine layouts with ease">
+    <meta name="theme-color" content="#2563eb">
+
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="PDF Zine Maker">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- Favicon and Icons -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z'/><polyline points='14 2 14 8 20 8'/></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z'/><polyline points='14 2 14 8 20 8'/></svg>">
+
+    <title>PDF Zine Maker</title>
+    <link rel="stylesheet" href="src/css/styles.css">
 </head>
 <body>
     <!-- Night Mode Toggle Button -->
-    <button id="themeToggle" class="theme-toggle" title="Toggle night mode (Space)" aria-keyshortcuts="Space" aria-label="Toggle night mode">
-        <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <button id="themeToggle" class="theme-toggle" title="Toggle night mode (Space)" aria-keyshortcuts="Space" aria-label="Toggle night mode" aria-pressed="false">
+        <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
         </svg>
     </button>
 
+    <!-- Skip to main content link -->
+    <a href="#main-content" class="sr-only sr-only-focusable">Skip to main content</a>
+
     <!-- Toast Container -->
     <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
-    <div class="container">
-        <!-- Header -->
-        <header class="no-print section text-center fade-in-up">
-            <h1 class="text-primary">PDF to Zine Maker</h1>
-            <p class="text-secondary">Create a beautiful foldable 8-page zine from any PDF file</p>
+    <div class="container" id="main-content">
+        <!-- Compact Header -->
+        <header class="no-print compact-header fade-in-up" role="banner">
+            <div class="header-content">
+                <h1 class="text-primary">PDF to Zine Maker</h1>
+                <p class="text-secondary">Convert PDF files into printable 8-page zines</p>
+            </div>
+
+            <!-- Action Buttons (shown when content is loaded) -->
+            <div id="action-buttons" class="action-buttons hidden" role="toolbar" aria-label="Document actions">
+                <button id="printBtn" class="btn btn-success btn-compact" title="Print Zine (Ctrl+P)" aria-keyshortcuts="Control+P" aria-describedby="print-desc">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                        <rect x="6" y="14" width="12" height="8"></rect>
+                    </svg>
+                    <span id="print-desc" class="sr-only">Print the zine layout</span>
+                    Print
+                </button>
+                <button id="exportPdfBtn" class="btn btn-primary btn-compact" title="Export PDF (Ctrl+S)" aria-keyshortcuts="Control+S" aria-describedby="export-desc">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span id="export-desc" class="sr-only">Export zine as PDF file</span>
+                    Export
+                </button>
+                <button id="settingsBtn" class="btn btn-secondary btn-compact" title="Settings" aria-label="Open settings panel" aria-expanded="false" aria-controls="settings-panel">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                </button>
+            </div>
         </header>
 
         <!-- Upload Section -->
-        <section class="no-print section">
-            <div class="card container" style="max-width: 48rem;">
-                <div id="upload-zone" class="upload-zone" tabindex="0" role="button" aria-label="Upload PDF file" title="Upload PDF (Ctrl+O)" aria-keyshortcuts="Control+O">
+        <section class="no-print upload-section">
+            <div class="upload-container">
+                <div id="upload-zone" class="upload-zone compact" tabindex="0" role="button" aria-label="Upload PDF file" title="Upload PDF (Ctrl+O)" aria-keyshortcuts="Control+O">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="upload-icon">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="17 8 12 3 7 8"></polyline>
                         <line x1="12" y1="3" x2="12" y2="15"></line>
                     </svg>
-                    <h3 class="upload-title">Drop your PDF here</h3>
-                    <p class="upload-subtitle">or <span class="upload-link">browse files</span></p>
-                    <p class="upload-hint">Supports PDF files up to 8 pages</p>
+                    <h3 class="upload-title">Drop PDF here or <span class="upload-link">browse files</span></h3>
+                    <p class="upload-hint">Supports up to 8 pages</p>
                     <input type="file" id="pdf-upload" class="hidden" accept="application/pdf" multiple="false">
                 </div>
-                <p id="upload-status" class="text-center text-muted" style="margin-top: var(--space-md); font-size: var(--font-size-sm);"></p>
-            </div>
-        </section>
-
-        <!-- Reference Layout Info -->
-        <section class="no-print section">
-            <div class="card container fade-in-up" style="max-width: 48rem;">
-                <div class="card-header">
-                    <h3 class="card-title">Zine Layout Reference</h3>
-                    <p class="card-description">Using the correct 8-page zine layout for proper folding</p>
-                </div>
-                <div class="text-center" style="margin-bottom: var(--space-md);">
-                    <div class="text-muted" style="font-size: var(--font-size-sm); margin-bottom: var(--space-md); font-weight: var(--font-weight-medium);">Page Layout (when printed):</div>
-                    <div style="font-size: var(--font-size-sm); font-family: monospace; padding: var(--space-md); border-radius: var(--radius-md); background: var(--color-accent-light); color: var(--color-text-primary); border: 1px solid var(--color-border);">
-                        Page 5 | Page 4 | Page 3 | Page 2<br>
-                        Page 6 | Page 7 | Page 8 | Page 1
-                    </div>
-                </div>
-                <div class="text-center">
-                    <p class="text-success" style="font-size: var(--font-size-sm); font-weight: var(--font-weight-medium);">✓ Reference image will be automatically included in print/export</p>
-                </div>
+                <p id="upload-status" class="upload-status text-center text-muted" aria-live="polite"></p>
             </div>
         </section>
 
         <!-- Progress Indicator -->
-        <section id="progress-container" class="no-print section progress-container">
-            <div class="card container" style="max-width: 48rem;">
-                <h3 class="text-primary text-center" style="margin-bottom: var(--space-md); font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold);">Processing PDF</h3>
-                <div>
-                    <div class="progress-bar">
-                        <div id="progress-fill" class="progress-fill"></div>
-                    </div>
-                    <div id="progress-text" class="progress-text">Starting...</div>
+        <section id="progress-container" class="no-print progress-container hidden">
+            <div class="progress-wrapper">
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill"></div>
                 </div>
+                <div id="progress-text" class="progress-text">Processing PDF...</div>
             </div>
         </section>
 
-        <!-- Scaling Controls -->
-        <section class="no-print section">
-            <div class="card container fade-in-up" style="max-width: 48rem;">
-                <div class="card-header">
-                    <h3 class="card-title">Page Scale</h3>
-                    <p class="card-description">Adjust the size of your zine pages for optimal printing</p>
-                </div>
-                <div>
-                    <div class="slider-label">
-                        <label for="scale-slider">Scale</label>
-                        <span id="scale-value" class="slider-value">100%</span>
-                    </div>
-                    <input type="range" id="scale-slider" min="50" max="200" value="100" class="slider">
-                    <div class="slider-ticks">
-                        <span>50%</span>
-                        <span>100%</span>
-                        <span>200%</span>
+        <!-- Settings Panel (collapsible) -->
+        <section id="settings-panel" class="no-print settings-panel hidden">
+            <div class="settings-content">
+                <div class="setting-group">
+                    <label for="scale-slider" class="setting-label">Page Scale</label>
+                    <div class="scale-controls">
+                        <input type="range" id="scale-slider" min="50" max="200" value="100" class="slider" aria-describedby="scale-value">
+                        <span id="scale-value" class="scale-value">100%</span>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <!-- Print and Export Buttons -->
-        <section class="no-print section text-center fade-in-up">
-            <div class="btn-group">
-                <button id="printBtn" class="btn btn-success" title="Print Zine (Ctrl+P)" aria-keyshortcuts="Control+P">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
-                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-                        <rect x="6" y="14" width="12" height="8"></rect>
-                    </svg>
-                    Print Zine
-                </button>
-                <button id="exportPdfBtn" class="btn btn-primary" title="Export PDF (Ctrl+S)" aria-keyshortcuts="Control+S">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    Export PDF
-                </button>
+                <div class="setting-group">
+                    <div class="layout-preview">
+                        <div class="layout-label">Print Layout:</div>
+                        <div class="layout-grid">
+                            <span>5</span><span>4</span><span>3</span><span>2</span>
+                            <span>6</span><span>7</span><span>8</span><span>1</span>
+                        </div>
+                        <div class="layout-note">✓ Reference image included automatically</div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -129,6 +127,6 @@
         </div>
     </div>
 
-    <script src="assets/app.js"></script>
+    <script type="module" src="src/js/app.js"></script>
 </body>
 </html>
