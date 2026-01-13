@@ -94,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Upload zone click handler
     uploadZone.addEventListener('click', () => {
+        console.log('Upload zone clicked, triggering file input');
         pdfUpload.click();
     });
 
