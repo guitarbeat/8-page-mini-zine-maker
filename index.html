@@ -30,8 +30,18 @@
     <!-- Skip to main content link -->
     <a href="#main-content" class="sr-only sr-only-focusable">Skip to main content</a>
 
-    <!-- Toast Container -->
-    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+        <!-- Reference Layout Info -->
+        <div class="no-print bg-white p-6 rounded-lg shadow-md max-w-lg mx-auto mb-8">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 text-center">Zine Layout Reference</h3>
+            <p class="text-sm text-gray-600 text-center mb-4">Using the standard 8-page zine layout with reference image on page 2</p>
+            <div class="text-center">
+                <button id="load-reference-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition transform hover:scale-105">
+                    Load Reference Layout
+                </button>
+            </div>
+        </div>
+
+
 
     <div class="container" id="main-content">
         <!-- Compact Header -->
@@ -302,6 +312,10 @@
             // Theme toggle event listener
             themeToggle.addEventListener('click', toggleTheme);
             
+            // Reference layout elements
+            const loadReferenceBtn = document.getElementById('load-reference-btn');
+            
+            
             // Scaling controls
             const scaleSlider = document.getElementById('scale-slider');
             const scaleValue = document.getElementById('scale-value');
@@ -370,151 +384,29 @@
                 zine.appendChild(page);
             }
 
-            // Function to create two-page print layout (front + back)
-            function createTwoPagePrintLayout() {
-                // Create a new window for printing
-                const printWindow = window.open('', '_blank');
+            // Load reference layout image on page 2
+            loadReferenceBtn.addEventListener('click', () => {
+                const referenceImageUrl = 'https://tahoetrailguide.com/wp-content/uploads/2018/05/8-Page_Zine_Page_Layout_1_Page_Numbers_Jared_Manninen_300ppi-1024x791.jpg';
                 
-                // Get the zine content
-                const zineContent = zine.outerHTML;
+                // Load the reference image on page 2
+                const imgPreview = document.getElementById('preview-2');
+                imgPreview.src = referenceImageUrl;
                 
-                // Create HTML for both pages
-                const printHTML = `
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>Zine Print Layout</title>
-                        <style>
-                            * { margin: 0; padding: 0; box-sizing: border-box; }
-                            
-                            @page {
-                                size: A4 landscape;
-                                margin: 0;
-                            }
-                            
-                            body {
-                                margin: 0;
-                                padding: 0;
-                                width: 100%;
-                                height: 100vh;
-                                overflow: hidden;
-                            }
-                            
-                            .print-page {
-                                width: 100%;
-                                height: 100vh;
-                                page-break-after: always;
-                                position: relative;
-                                display: block;
-                            }
-                            
-                            .print-page:last-child {
-                                page-break-after: auto;
-                            }
-                            
-                            .front-side {
-                                display: grid;
-                                grid-template-areas:
-                                    "page5 page4 page3 page2"
-                                    "page6 page7 page8 page1";
-                                width: 100%;
-                                height: 100%;
-                                gap: 0;
-                                padding: 0;
-                                margin: 0;
-                            }
-                            
-                            .back-side {
-                                background-image: url('${referenceImageUrl}');
-                                background-size: contain;
-                                background-repeat: no-repeat;
-                                background-position: center;
-                                transform: rotate(180deg);
-                                width: 100%;
-                                height: 100%;
-                            }
-                            
-                            .zine {
-                                display: grid;
-                                grid-template-areas:
-                                    "page5 page4 page3 page2"
-                                    "page6 page7 page8 page1";
-                                width: 100%;
-                                height: 100%;
-                                gap: 0;
-                                padding: 0;
-                                margin: 0;
-                            }
-                            
-                            .zine > * {
-                                width: 100%;
-                                height: 100%;
-                                border: none;
-                                box-shadow: none;
-                                display: grid;
-                                grid-template-columns: repeat(15, 1fr);
-                                grid-template-rows: repeat(21, 1fr);
-                                background-color: white;
-                                overflow: hidden;
-                                position: relative;
-                            }
-                            
-                            .zine > *:nth-child(1) { grid-area: page1; }
-                            .zine > *:nth-child(2) { grid-area: page2; }
-                            .zine > *:nth-child(3) { grid-area: page3; }
-                            .zine > *:nth-child(4) { grid-area: page4; }
-                            .zine > *:nth-child(5) { grid-area: page5; }
-                            .zine > *:nth-child(6) { grid-area: page6; }
-                            .zine > *:nth-child(7) { grid-area: page7; }
-                            .zine > *:nth-child(8) { grid-area: page8; }
-                            
-                            .zine > *:nth-child(8), 
-                            .zine > *:nth-child(1), 
-                            .zine > *:nth-child(2), 
-                            .zine > *:nth-child(7) {
-                                transform: rotate(180deg);
-                            }
-                            
-                            .page-content {
-                                grid-column: 1 / -1;
-                                grid-row: 1 / -1;
-                                position: relative;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                overflow: hidden;
-                            }
-                            
-                            .page-content img {
-                                width: 100%;
-                                height: 100%;
-                                object-fit: contain;
-                            }
-                            
-                            .page-number {
-                                display: none;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="print-page front-side">
-                            ${zineContent}
-                        </div>
-                        <div class="print-page back-side">
-                        </div>
-                    </body>
-                    </html>
-                `;
+                // Hide placeholder for page 2
+                const placeholder = document.querySelector('#content-2 .placeholder');
+                placeholder.style.display = 'none';
                 
-                printWindow.document.write(printHTML);
-                printWindow.document.close();
-                printWindow.focus();
-                printWindow.print();
-                printWindow.close();
-            }
+                // Update button text
+                loadReferenceBtn.textContent = 'Reference Loaded ✓';
+                loadReferenceBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                loadReferenceBtn.classList.add('bg-gray-500', 'cursor-not-allowed');
+                loadReferenceBtn.disabled = true;
+            });
 
-            // File upload handler
-            function handleFileUpload(file) {
+
+            // PDF upload handler with improved image conversion
+            pdfUpload.addEventListener('change', async (event) => {
+                const file = event.target.files[0];
                 if (!file || file.type !== 'application/pdf') {
                     showToast('error', 'Invalid File', 'Please select a PDF file.');
                     return;
