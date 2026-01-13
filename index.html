@@ -21,14 +21,14 @@
 </head>
 <body>
     <!-- Night Mode Toggle Button -->
-    <button id="themeToggle" class="theme-toggle" title="Toggle night mode (Space)" aria-keyshortcuts="Space" aria-label="Toggle night mode" aria-pressed="false">
-        <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <button id="themeToggle" class="theme-toggle" title="Toggle night mode (Space)" aria-keyshortcuts="Space">
+        <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
         </svg>
     </button>
 
-    <!-- Skip to main content link -->
-    <a href="#main-content" class="sr-only sr-only-focusable">Skip to main content</a>
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 
         <!-- Reference Layout Info -->
         <div class="no-print bg-white p-6 rounded-lg shadow-md max-w-lg mx-auto mb-8">
@@ -81,9 +81,9 @@
         </header>
 
         <!-- Upload Section -->
-        <section class="no-print upload-section">
-            <div class="upload-container">
-                <div id="upload-zone" class="upload-zone compact" tabindex="0" role="button" aria-label="Upload PDF file" title="Upload PDF (Ctrl+O)" aria-keyshortcuts="Control+O">
+        <section class="no-print section">
+            <div class="card container" style="max-width: 48rem;">
+                <div id="upload-zone" class="upload-zone" tabindex="0" role="button" aria-label="Upload PDF file" aria-keyshortcuts="Control+O" title="Upload PDF file (Ctrl+O)">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="upload-icon">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="17 8 12 3 7 8"></polyline>
@@ -131,16 +131,25 @@
                     </div>
                 </div>
 
-                <div class="setting-group">
-                    <div class="layout-preview">
-                        <div class="layout-label">Print Layout:</div>
-                        <div class="layout-grid">
-                            <span>5</span><span>4</span><span>3</span><span>2</span>
-                            <span>6</span><span>7</span><span>8</span><span>1</span>
-                        </div>
-                        <div class="layout-note">✓ Reference image included automatically</div>
-                    </div>
-                </div>
+        <!-- Print and Export Buttons -->
+        <section class="no-print section text-center fade-in-up">
+            <div class="btn-group">
+                <button id="printBtn" class="btn btn-success" title="Print Zine (Ctrl+P)" aria-keyshortcuts="Control+P">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                        <rect x="6" y="14" width="12" height="8"></rect>
+                    </svg>
+                    Print Zine
+                </button>
+                <button id="exportPdfBtn" class="btn btn-primary" title="Export PDF (Ctrl+S)" aria-keyshortcuts="Control+S">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Export PDF
+                </button>
             </div>
         </section>
 
@@ -199,7 +208,7 @@
                         <div class="toast-title">${title}</div>
                         <div class="toast-message">${message}</div>
                     </div>
-                    <button class="toast-close">
+                    <button class="toast-close" aria-label="Close notification">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </button>
                     <div class="toast-progress" style="width: 100%; animation-duration: ${duration}ms;"></div>
