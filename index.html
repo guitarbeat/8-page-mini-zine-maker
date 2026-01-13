@@ -111,14 +111,23 @@
             </div>
         </section>
 
-        <!-- Settings Panel (collapsible) -->
-        <section id="settings-panel" class="no-print settings-panel hidden">
-            <div class="settings-content">
-                <div class="setting-group">
-                    <label for="scale-slider" class="setting-label">Page Scale</label>
-                    <div class="scale-controls">
-                        <input type="range" id="scale-slider" min="50" max="200" value="100" class="slider" aria-describedby="scale-value">
-                        <span id="scale-value" class="scale-value">100%</span>
+        <!-- Scaling Controls -->
+        <section class="no-print section">
+            <div class="card container fade-in-up" style="max-width: 48rem;">
+                <div class="card-header">
+                    <h3 class="card-title">Page Scale</h3>
+                    <p class="card-description">Adjust the size of your zine pages for optimal printing</p>
+                </div>
+                <div>
+                    <div class="slider-label">
+                        <label for="scale-slider">Scale</label>
+                        <span id="scale-value" class="slider-value">100%</span>
+                    </div>
+                    <input type="range" id="scale-slider" min="50" max="200" value="100" class="slider">
+                    <div class="slider-ticks">
+                        <span class="tick-label" role="button" tabindex="0" aria-label="Set scale to 50%" data-value="50">50%</span>
+                        <span class="tick-label" role="button" tabindex="0" aria-label="Set scale to 100%" data-value="100">100%</span>
+                        <span class="tick-label" role="button" tabindex="0" aria-label="Set scale to 200%" data-value="200">200%</span>
                     </div>
                 </div>
 
