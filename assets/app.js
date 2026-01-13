@@ -105,27 +105,37 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentScale = 100;
 
     // Scaling functions
+    let scaleRafId = null;
+
     function updateScale(scale) {
         currentScale = scale;
         scaleValue.textContent = scale + '%';
         scaleSlider.value = scale;
 
-        // Update zine container scale
-        zine.classList.add('scaled');
-        zine.style.transform = `scale(${scale / 100})`;
+        if (scaleRafId) cancelAnimationFrame(scaleRafId);
 
-        // Update individual page content scale
-        const pageContents = document.querySelectorAll('.page-content');
-        pageContents.forEach(content => {
-            content.classList.add('scaled');
-            content.style.transform = `scale(${scale / 100})`;
-        });
+        scaleRafId = requestAnimationFrame(() => {
+            const scaleTransform = `scale(${scale / 100})`;
 
-        // Update images scale
-        const images = document.querySelectorAll('.page-content img');
-        images.forEach(img => {
-            img.classList.add('scaled');
-            img.style.transform = `scale(${scale / 100})`;
+            // Update zine container scale
+            zine.classList.add('scaled');
+            zine.style.transform = scaleTransform;
+
+            // Update individual page content scale
+            const pageContents = document.querySelectorAll('.page-content');
+            pageContents.forEach(content => {
+                content.classList.add('scaled');
+                content.style.transform = scaleTransform;
+            });
+
+            // Update images scale
+            const images = document.querySelectorAll('.page-content img');
+            images.forEach(img => {
+                img.classList.add('scaled');
+                img.style.transform = scaleTransform;
+            });
+
+            scaleRafId = null;
         });
     }
 
