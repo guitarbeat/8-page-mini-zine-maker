@@ -338,6 +338,8 @@
             // Generate the 8 blank page placeholders
             for (let i = 1; i <= 8; i++) {
                 const page = document.createElement('article');
+                page.className = 'fade-in-up';
+                page.style.animationDelay = `${i * 0.1}s`;
                 
                 const content = document.createElement('div');
                 content.className = 'page-content';
