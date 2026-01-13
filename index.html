@@ -98,10 +98,14 @@
         </section>
 
         <!-- Progress Indicator -->
-        <section id="progress-container" class="no-print progress-container hidden">
-            <div class="progress-wrapper">
-                <div class="progress-bar">
-                    <div id="progress-fill" class="progress-fill"></div>
+        <section id="progress-container" class="no-print section progress-container">
+            <div class="card container" style="max-width: 48rem;">
+                <h3 class="text-primary text-center" style="margin-bottom: var(--space-md); font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold);">Processing PDF</h3>
+                <div>
+                    <div class="progress-bar" role="progressbar" aria-label="PDF Conversion Progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                    <div id="progress-text" class="progress-text">Starting...</div>
                 </div>
                 <div id="progress-text" class="progress-text">Processing PDF...</div>
             </div>
@@ -220,12 +224,14 @@
             function showProgress() {
                 progressContainer.classList.add('active');
                 progressFill.style.width = '0%';
+                progressFill.parentElement.setAttribute('aria-valuenow', '0');
                 progressText.textContent = 'Starting...';
                 progressStartTime = Date.now();
             }
             
             function updateProgress(percent, text) {
                 progressFill.style.width = percent + '%';
+                progressFill.parentElement.setAttribute('aria-valuenow', Math.round(percent));
                 progressText.textContent = text;
             }
             
@@ -294,9 +300,11 @@
                 if (isDarkMode) {
                     html.setAttribute('data-theme', 'dark');
                     themeIcon.innerHTML = '<path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>';
+                    themeToggle.setAttribute('aria-label', 'Switch to light mode');
                 } else {
                     html.setAttribute('data-theme', 'light');
                     themeIcon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+                    themeToggle.setAttribute('aria-label', 'Switch to dark mode');
                 }
                 localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
             }
