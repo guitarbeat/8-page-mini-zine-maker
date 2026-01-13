@@ -8,6 +8,8 @@ export class UIManager {
     this.elements = {};
     this.currentScale = 100;
     this.isDarkMode = false;
+    this.paperSize = 'a4';
+    this.orientation = 'landscape';
     this.init();
   }
 
@@ -17,6 +19,7 @@ export class UIManager {
   init() {
     this.cacheElements();
     this.setupTheme();
+    this.loadSettings();
     this.setupEventListeners();
     this.setupKeyboardShortcuts();
   }
@@ -43,6 +46,10 @@ export class UIManager {
       progressText: $('#progress-text'),
       actionButtons: $('#action-buttons'),
       settingsPanel: $('#settings-panel'),
+      paperSizeSelect: $('#paper-size-select'),
+      orientationSelect: $('#orientation-select'),
+      settingsCloseBtn: $('.settings-close'),
+      settingsOverlay: $('.settings-overlay'),
       toastContainer: $('#toast-container')
     };
   }
@@ -103,6 +110,12 @@ export class UIManager {
 
     // Settings button
     this.elements.settingsBtn?.addEventListener('click', () => this.toggleSettings());
+
+    // Settings panel controls
+    this.elements.settingsCloseBtn?.addEventListener('click', () => this.setSettingsVisible(false));
+    this.elements.settingsOverlay?.addEventListener('click', () => this.setSettingsVisible(false));
+    this.elements.paperSizeSelect?.addEventListener('change', (e) => this.updatePaperSize(e.target.value));
+    this.elements.orientationSelect?.addEventListener('change', (e) => this.updateOrientation(e.target.value));
 
     // Upload zone interactions
     this.elements.uploadZone?.addEventListener('click', () => this.triggerFileUpload());
@@ -218,6 +231,12 @@ export class UIManager {
         e.target === this.elements.uploadZone) {
       e.preventDefault();
       this.triggerFileUpload();
+    }
+
+    // Escape key closes settings panel
+    if (e.key === 'Escape' && !this.elements.settingsPanel?.classList.contains('hidden')) {
+      e.preventDefault();
+      this.setSettingsVisible(false);
     }
   }
 
@@ -446,6 +465,85 @@ export class UIManager {
   emit(event, data) {
     const customEvent = new CustomEvent(event, { detail: data });
     document.dispatchEvent(customEvent);
+  }
+
+  /**
+   * Load settings from localStorage
+   */
+  loadSettings() {
+    this.paperSize = localStorage.getItem('paperSize') || 'a4';
+    this.orientation = localStorage.getItem('orientation') || 'landscape';
+
+    // Update UI elements
+    if (this.elements.paperSizeSelect) {
+      this.elements.paperSizeSelect.value = this.paperSize;
+    }
+    if (this.elements.orientationSelect) {
+      this.elements.orientationSelect.value = this.orientation;
+    }
+  }
+
+  /**
+   * Update paper size setting
+   * @param {string} paperSize - New paper size
+   */
+  updatePaperSize(paperSize) {
+    this.paperSize = paperSize;
+    localStorage.setItem('paperSize', paperSize);
+    this.emit('paperSizeChanged', { paperSize, orientation: this.orientation });
+    toast.info('Paper Size', `Changed to ${this.getPaperSizeLabel(paperSize)}`);
+  }
+
+  /**
+   * Update orientation setting
+   * @param {string} orientation - New orientation
+   */
+  updateOrientation(orientation) {
+    this.orientation = orientation;
+    localStorage.setItem('orientation', orientation);
+    this.emit('orientationChanged', { paperSize: this.paperSize, orientation });
+    toast.info('Orientation', `Changed to ${orientation.charAt(0).toUpperCase() + orientation.slice(1)}`);
+  }
+
+  /**
+   * Get paper size dimensions in mm
+   * @param {string} paperSize - Paper size identifier
+   * @param {string} orientation - Orientation (landscape/portrait)
+   * @returns {Object} Dimensions object with width and height
+   */
+  getPaperDimensions(paperSize, orientation) {
+    const dimensions = {
+      a4: { width: 210, height: 297 },
+      a3: { width: 297, height: 420 },
+      letter: { width: 215.9, height: 279.4 }, // 8.5 × 11 inches in mm
+      legal: { width: 215.9, height: 355.6 },  // 8.5 × 14 inches in mm
+      a5: { width: 148, height: 210 }
+    };
+
+    const size = dimensions[paperSize] || dimensions.a4;
+
+    // Swap dimensions for portrait
+    if (orientation === 'portrait') {
+      return { width: size.height, height: size.width };
+    }
+
+    return size;
+  }
+
+  /**
+   * Get human-readable paper size label
+   * @param {string} paperSize - Paper size identifier
+   * @returns {string} Human-readable label
+   */
+  getPaperSizeLabel(paperSize) {
+    const labels = {
+      a4: 'A4',
+      a3: 'A3',
+      letter: 'Letter',
+      legal: 'Legal',
+      a5: 'A5'
+    };
+    return labels[paperSize] || 'A4';
   }
 
   /**

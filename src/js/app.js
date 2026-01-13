@@ -41,6 +41,8 @@ class PDFZineMaker {
     this.ui.on('fileSelected', (data) => this.processPDF(data.file));
     this.ui.on('print', () => this.handlePrint());
     this.ui.on('export', () => this.handleExport());
+    this.ui.on('paperSizeChanged', (data) => this.updatePaperSettings(data));
+    this.ui.on('orientationChanged', (data) => this.updatePaperSettings(data));
 
     // Button events
     this.ui.elements.printBtn?.addEventListener('click', () => this.handlePrint());
@@ -272,6 +274,16 @@ class PDFZineMaker {
   }
 
   /**
+   * Update paper settings
+   * @param {Object} settings - Paper size and orientation settings
+   */
+  updatePaperSettings(settings) {
+    this.paperSize = settings.paperSize;
+    this.orientation = settings.orientation;
+    console.log(`Paper settings updated: ${settings.paperSize} ${settings.orientation}`);
+  }
+
+  /**
    * Create print layout with front and back sides
    */
   createPrintLayout() {
@@ -291,7 +303,7 @@ class PDFZineMaker {
         <title>Zine Print Layout</title>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
-          @page { size: A4 landscape; margin: 0; }
+          @page { size: ${this.paperSize || 'a4'} ${this.orientation || 'landscape'}; margin: 0; }
           body { margin: 0; padding: 0; width: 100%; height: 100vh; overflow: hidden; }
           .print-page { width: 100%; height: 100vh; page-break-after: always; position: relative; display: block; }
           .print-page:last-child { page-break-after: auto; }
@@ -362,12 +374,13 @@ class PDFZineMaker {
       toast.info('Export Started', 'Generating PDF... This may take a moment.');
 
       // Create temporary container for rendering
+      const dimensions = this.ui.getPaperDimensions(this.paperSize || 'a4', this.orientation || 'landscape');
       const tempContainer = document.createElement('div');
       tempContainer.style.position = 'absolute';
       tempContainer.style.left = '-9999px';
       tempContainer.style.top = '0';
-      tempContainer.style.width = '210mm';
-      tempContainer.style.height = '297mm';
+      tempContainer.style.width = dimensions.width + 'mm';
+      tempContainer.style.height = dimensions.height + 'mm';
       tempContainer.style.background = 'white';
       tempContainer.style.padding = '0';
       tempContainer.style.margin = '0';
@@ -383,13 +396,14 @@ class PDFZineMaker {
       window.html2canvas.logging = false;
 
       // Capture zine as canvas
+      const dimensions = this.ui.getPaperDimensions(this.paperSize || 'a4', this.orientation || 'landscape');
       const canvas = await html2canvas(zineClone, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
-        width: 210 * 4,
-        height: 297 * 4
+        width: dimensions.width * 4,
+        height: dimensions.height * 4
       });
 
       // Clean up temporary container
@@ -397,11 +411,16 @@ class PDFZineMaker {
 
       // Create PDF
       const { jsPDF } = jspdf;
-      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const pdf = new jsPDF({
+        orientation: this.orientation || 'landscape',
+        unit: 'mm',
+        format: this.paperSize || 'a4'
+      });
 
       // Add front side
       const imgData = canvas.toDataURL('image/png', 1.0);
-      pdf.addImage(imgData, 'PNG', 0, 0, 297, 210);
+      const dimensions = this.ui.getPaperDimensions(this.paperSize || 'a4', this.orientation || 'landscape');
+      pdf.addImage(imgData, 'PNG', 0, 0, dimensions.width, dimensions.height);
 
       // Add back side
       pdf.addPage();
@@ -493,8 +512,9 @@ class PDFZineMaker {
     return new Promise((resolve, reject) => {
       const backSideCanvas = document.createElement('canvas');
       const backSideContext = backSideCanvas.getContext('2d');
-      backSideCanvas.width = 210 * 4;
-      backSideCanvas.height = 297 * 4;
+      const dimensions = this.ui.getPaperDimensions(this.paperSize || 'a4', this.orientation || 'landscape');
+      backSideCanvas.width = dimensions.width * 4;
+      backSideCanvas.height = dimensions.height * 4;
 
       const referenceImg = new Image();
       referenceImg.crossOrigin = 'anonymous';
@@ -507,7 +527,8 @@ class PDFZineMaker {
           backSideContext.restore();
 
           const backSideData = backSideCanvas.toDataURL('image/png', 1.0);
-          pdf.addImage(backSideData, 'PNG', 0, 0, 297, 210);
+          const dimensions = this.ui.getPaperDimensions(this.paperSize || 'a4', this.orientation || 'landscape');
+          pdf.addImage(backSideData, 'PNG', 0, 0, dimensions.width, dimensions.height);
           resolve();
         } catch (error) {
           reject(error);
