@@ -30,8 +30,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'PDF Zine Maker',
-        short_name: 'ZineMaker',
+        name: 'Octovo Zine Maker',
+        short_name: 'Octovo',
         description: 'Convert PDFs into printable 8-page zine layouts',
         theme_color: '#2563eb',
         icons: [
