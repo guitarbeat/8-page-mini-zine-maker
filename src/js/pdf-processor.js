@@ -1,6 +1,7 @@
 // Modern PDF processing class
 
 import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { formatFileSize } from './utils.js';
 
 export class PDFProcessor {
@@ -13,10 +14,7 @@ export class PDFProcessor {
    * Initialize PDF.js worker
    */
   async initialize() {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-      'pdfjs-dist/build/pdf.worker.min.mjs',
-      import.meta.url
-    ).toString();
+    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
   }
 
   /**
