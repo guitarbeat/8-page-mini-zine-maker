@@ -117,6 +117,23 @@ export class UIManager {
     // Settings panel controls
     this.elements.settingsCloseBtn?.addEventListener('click', () => this.setSettingsVisible(false));
     this.elements.settingsOverlay?.addEventListener('click', () => this.setSettingsVisible(false));
+
+    // Zine tabs
+    this.elements.zineTab1?.addEventListener('click', () => {
+      this.elements.zineTab1.classList.add('active');
+      this.elements.zineTab2.classList.remove('active');
+      this.elements.zineTab1.setAttribute('aria-selected', 'true');
+      this.elements.zineTab2.setAttribute('aria-selected', 'false');
+      this.emit('zineTabChanged', 1);
+    });
+
+    this.elements.zineTab2?.addEventListener('click', () => {
+      this.elements.zineTab2.classList.add('active');
+      this.elements.zineTab1.classList.remove('active');
+      this.elements.zineTab2.setAttribute('aria-selected', 'true');
+      this.elements.zineTab1.setAttribute('aria-selected', 'false');
+      this.emit('zineTabChanged', 2);
+    });
     this.elements.paperSizeSelect?.addEventListener('change', (e) => this.updatePaperSize(e.target.value));
     this.elements.orientationSelect?.addEventListener('change', (e) => this.updateOrientation(e.target.value));
 

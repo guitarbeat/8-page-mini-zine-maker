@@ -282,6 +282,8 @@ class PDFZineMaker {
    * @param {number} pageNum - Page number
    */
   createBlankPage(pageNum) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1000;
     canvas.height = 1400;
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#ffffff';
@@ -317,98 +319,56 @@ class PDFZineMaker {
     // Update all 8 slots
     for (let i = 1; i <= 8; i++) {
       const pageIndex = startPage + i - 1;
-   * @param { number } pageNum - Page number
-        */
-      createBlankPage(pageNum) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 1000;
-        canvas.height = 1400;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, 1000, 1400);
+      const dataUrl = this.allPageImages[pageIndex];
 
-        // Add text info
-        ctx.font = '40px Arial';
-        ctx.fillStyle = '#cccccc';
-        ctx.textAlign = 'center';
-        ctx.fillText('Blank Page', 500, 700);
-
-        const dataUrl = canvas.toDataURL('image/png');
-        this.allPageImages[pageNum - 1] = dataUrl;
-
-        // Only update if visible in current zine
-        const currentZineStart = (this.currentZine - 1) * 8;
-        const currentZineEnd = this.currentZine * 8;
-
-        if (pageNum > currentZineStart && pageNum <= currentZineEnd) {
-          const displayNum = pageNum > 8 ? pageNum - 8 : pageNum;
-          this.ui.updatePagePreview(displayNum, dataUrl);
-        }
+      if (dataUrl) {
+        this.ui.updatePagePreview(i, dataUrl);
       }
+    }
+  }
 
-      /**
-       * Update the zine view based on selected tab
-       * @param {number} zineNum - Zine number (1 or 2)
-       */
-      updateZineView(zineNum) {
-        this.currentZine = zineNum;
-        const startPage = (zineNum - 1) * 8;
 
-        // Update all 8 slots
-        for (let i = 1; i <= 8; i++) {
-          const pageIndex = startPage + i - 1;
-          const dataUrl = this.allPageImages[pageIndex];
+  /**
+   * Handle print action
+   */
+  handlePrint() {
+    if (!this.ui.hasContent()) {
+      toast.error('No Content', 'Please upload a PDF first before printing');
+      return;
+    }
 
-          if (dataUrl) {
-            this.ui.updatePagePreview(i, dataUrl);
-          } else {
-            // If the array has gaps or isn't filled yet, ensure we don't show old images
-            // Ideally we should have placeholders, but updatePagePreview handles missing data gracefully
-          }
-        }
-      }
+    try {
+      this.createPrintLayout();
+    } catch (error) {
+      console.error('Print error:', error);
+      toast.error('Print Error', 'Failed to create print layout');
+    }
+  }
 
-      /**
-       * Handle print action
-       */
-      handlePrint() {
-        if (!this.ui.hasContent()) {
-          toast.error('No Content', 'Please upload a PDF first before printing');
-          return;
-        }
+  /**
+   * Update paper settings
+   * @param {Object} settings - Paper size and orientation settings
+   */
+  updatePaperSettings(settings) {
+    this.paperSize = settings.paperSize;
+    this.orientation = settings.orientation;
+    console.log(`Paper settings updated: ${settings.paperSize} ${settings.orientation}`);
+  }
 
-        try {
-          this.createPrintLayout();
-        } catch (error) {
-          console.error('Print error:', error);
-          toast.error('Print Error', 'Failed to create print layout');
-        }
-      }
+  /**
+   * Create print layout with front and back sides
+   */
+  createPrintLayout() {
+    const printWindow = window.open('', '_blank');
 
-      /**
-       * Update paper settings
-       * @param {Object} settings - Paper size and orientation settings
-       */
-      updatePaperSettings(settings) {
-        this.paperSize = settings.paperSize;
-        this.orientation = settings.orientation;
-        console.log(`Paper settings updated: ${settings.paperSize} ${settings.orientation}`);
-      }
+    if (!printWindow) {
+      toast.error('Popup Blocked', 'Please allow popups for this site to enable printing');
+      return;
+    }
 
-      /**
-       * Create print layout with front and back sides
-       */
-      createPrintLayout() {
-        const printWindow = window.open('', '_blank');
+    const zineContent = this.ui.elements.zine.outerHTML;
 
-        if (!printWindow) {
-          toast.error('Popup Blocked', 'Please allow popups for this site to enable printing');
-          return;
-        }
-
-        const zineContent = this.ui.elements.zine.outerHTML;
-
-        const printHTML = `
+    const printHTML = `
       <!DOCTYPE html>
       <html>
       <head>
@@ -444,38 +404,38 @@ class PDFZineMaker {
       </html>
     `;
 
-        printWindow.document.write(printHTML);
-        printWindow.document.close();
-        printWindow.focus();
-        printWindow.print();
-        printWindow.close();
-      }
+    printWindow.document.write(printHTML);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  }
 
   /**
    * Handle PDF export action
    */
   async handleExport() {
-        if (!this.ui.hasContent()) {
-          toast.error('No Content', 'Please upload a PDF first before exporting');
-          return;
-        }
+    if (!this.ui.hasContent()) {
+      toast.error('No Content', 'Please upload a PDF first before exporting');
+      return;
+    }
 
-        try {
-          await this.exportAsPDF();
-        } catch (error) {
-          console.error('Export error:', error);
-          toast.error('Export Error', error.message || 'Failed to export PDF');
-        }
-      }
+    try {
+      await this.exportAsPDF();
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Export Error', error.message || 'Failed to export PDF');
+    }
+  }
 
   /**
    * Export zine as PDF
    */
   async exportAsPDF() {
-        try {
-          // Show loading state
-          this.ui.elements.exportPdfBtn.disabled = true;
-          this.ui.elements.exportPdfBtn.innerHTML = `
+    try {
+      // Show loading state
+      this.ui.elements.exportPdfBtn.disabled = true;
+      this.ui.elements.exportPdfBtn.innerHTML = `
         <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -483,66 +443,66 @@ class PDFZineMaker {
         Exporting...
       `;
 
-          toast.info('Export Started', 'Generating PDF... This may take a moment.');
+      toast.info('Export Started', 'Generating PDF... This may take a moment.');
 
-          // Create temporary container for rendering
-          const dimensions = this.ui.getPaperDimensions(this.paperSize || 'a4', this.orientation || 'landscape');
-          const tempContainer = document.createElement('div');
-          tempContainer.style.position = 'absolute';
-          tempContainer.style.left = '-9999px';
-          tempContainer.style.top = '0';
-          tempContainer.style.width = dimensions.width + 'mm';
-          tempContainer.style.height = dimensions.height + 'mm';
-          tempContainer.style.background = 'white';
-          tempContainer.style.padding = '0';
-          tempContainer.style.margin = '0';
+      // Create temporary container for rendering
+      const dimensions = this.ui.getPaperDimensions(this.paperSize || 'a4', this.orientation || 'landscape');
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.top = '0';
+      tempContainer.style.width = dimensions.width + 'mm';
+      tempContainer.style.height = dimensions.height + 'mm';
+      tempContainer.style.background = 'white';
+      tempContainer.style.padding = '0';
+      tempContainer.style.margin = '0';
 
-          // Clone and prepare zine for export
-          const zineClone = this.ui.elements.zine.cloneNode(true);
-          this.prepareZineForExport(zineClone);
+      // Clone and prepare zine for export
+      const zineClone = this.ui.elements.zine.cloneNode(true);
+      this.prepareZineForExport(zineClone);
 
-          tempContainer.appendChild(zineClone);
-          document.body.appendChild(tempContainer);
+      tempContainer.appendChild(zineClone);
+      document.body.appendChild(tempContainer);
 
-          // Configure html2canvas
-          window.html2canvas.logging = false;
+      // Configure html2canvas
+      window.html2canvas.logging = false;
 
-          // Capture zine as canvas
-          const canvas = await html2canvas(zineClone, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#ffffff',
-            width: dimensions.width * 4,
-            height: dimensions.height * 4
-          });
+      // Capture zine as canvas
+      const canvas = await html2canvas(zineClone, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        width: dimensions.width * 4,
+        height: dimensions.height * 4
+      });
 
-          // Clean up temporary container
-          document.body.removeChild(tempContainer);
+      // Clean up temporary container
+      document.body.removeChild(tempContainer);
 
-          // Create PDF
-          const pdf = new jsPDF({
-            orientation: this.orientation || 'landscape',
-            unit: 'mm',
-            format: this.paperSize || 'a4'
-          });
+      // Create PDF
+      const pdf = new jsPDF({
+        orientation: this.orientation || 'landscape',
+        unit: 'mm',
+        format: this.paperSize || 'a4'
+      });
 
-          // Add front side
-          const imgData = canvas.toDataURL('image/png', 1.0);
-          pdf.addImage(imgData, 'PNG', 0, 0, dimensions.width, dimensions.height);
+      // Add front side
+      const imgData = canvas.toDataURL('image/png', 1.0);
+      pdf.addImage(imgData, 'PNG', 0, 0, dimensions.width, dimensions.height);
 
-          // Add back side
-          pdf.addPage();
-          await this.addBackSideToPDF(pdf);
+      // Add back side
+      pdf.addPage();
+      await this.addBackSideToPDF(pdf);
 
-          // Generate filename and save
-          const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-          const filename = `zine-export-${timestamp}.pdf`;
-          pdf.save(filename);
+      // Generate filename and save
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+      const filename = `zine-export-${timestamp}.pdf`;
+      pdf.save(filename);
 
-          // Reset button
-          this.ui.elements.exportPdfBtn.disabled = false;
-          this.ui.elements.exportPdfBtn.innerHTML = `
+      // Reset button
+      this.ui.elements.exportPdfBtn.disabled = false;
+      this.ui.elements.exportPdfBtn.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="7 10 12 15 17 10"></polyline>
@@ -551,13 +511,13 @@ class PDFZineMaker {
         Export PDF
       `;
 
-          this.ui.setStatus(`PDF exported successfully as ${filename}`, 'success');
-          toast.success('Export Complete', `Saved as ${filename}`);
+      this.ui.setStatus(`PDF exported successfully as ${filename}`, 'success');
+      toast.success('Export Complete', `Saved as ${filename}`);
 
-        } catch (error) {
-          // Reset button on error
-          this.ui.elements.exportPdfBtn.disabled = false;
-          this.ui.elements.exportPdfBtn.innerHTML = `
+    } catch (error) {
+      // Reset button on error
+      this.ui.elements.exportPdfBtn.disabled = false;
+      this.ui.elements.exportPdfBtn.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="7 10 12 15 17 10"></polyline>
@@ -566,90 +526,90 @@ class PDFZineMaker {
         Export PDF
       `;
 
-          throw error;
-        }
+      throw error;
+    }
+  }
+
+  /**
+   * Prepare zine clone for PDF export
+   * @param {Element} zineClone - Cloned zine element
+   */
+  prepareZineForExport(zineClone) {
+    zineClone.style.display = 'grid';
+    zineClone.style.gridTemplateAreas = '"page5 page4 page3 page2" "page6 page7 page8 page1"';
+    zineClone.style.width = '100%';
+    zineClone.style.height = '100%';
+    zineClone.style.gap = '0';
+    zineClone.style.padding = '0';
+    zineClone.style.margin = '0';
+    zineClone.style.position = 'fixed';
+    zineClone.style.top = '0';
+    zineClone.style.left = '0';
+
+    // Apply rotation for proper folding
+    const pages = zineClone.querySelectorAll('article');
+    pages.forEach((page, index) => {
+      page.style.width = '100%';
+      page.style.height = '100%';
+      page.style.border = 'none';
+      page.style.boxShadow = 'none';
+
+      const pageNumber = index + 1;
+      if (pageNumber === 5 || pageNumber === 4 || pageNumber === 3 || pageNumber === 2) {
+        page.style.transform = 'rotate(180deg)';
       }
+    });
 
-      /**
-       * Prepare zine clone for PDF export
-       * @param {Element} zineClone - Cloned zine element
-       */
-      prepareZineForExport(zineClone) {
-        zineClone.style.display = 'grid';
-        zineClone.style.gridTemplateAreas = '"page5 page4 page3 page2" "page6 page7 page8 page1"';
-        zineClone.style.width = '100%';
-        zineClone.style.height = '100%';
-        zineClone.style.gap = '0';
-        zineClone.style.padding = '0';
-        zineClone.style.margin = '0';
-        zineClone.style.position = 'fixed';
-        zineClone.style.top = '0';
-        zineClone.style.left = '0';
-
-        // Apply rotation for proper folding
-        const pages = zineClone.querySelectorAll('article');
-        pages.forEach((page, index) => {
-          page.style.width = '100%';
-          page.style.height = '100%';
-          page.style.border = 'none';
-          page.style.boxShadow = 'none';
-
-          const pageNumber = index + 1;
-          if (pageNumber === 5 || pageNumber === 4 || pageNumber === 3 || pageNumber === 2) {
-            page.style.transform = 'rotate(180deg)';
-          }
-        });
-
-        // Add cut line
-        const cutLine = document.createElement('div');
-        cutLine.style.position = 'absolute';
-        cutLine.style.top = '50%';
-        cutLine.style.left = '0';
-        cutLine.style.right = '0';
-        cutLine.style.height = '2px';
-        cutLine.style.background = 'repeating-linear-gradient(to right, #000 0px, #000 10px, transparent 10px, transparent 20px)';
-        cutLine.style.zIndex = '10';
-        cutLine.style.pointerEvents = 'none';
-        zineClone.appendChild(cutLine);
-      }
+    // Add cut line
+    const cutLine = document.createElement('div');
+    cutLine.style.position = 'absolute';
+    cutLine.style.top = '50%';
+    cutLine.style.left = '0';
+    cutLine.style.right = '0';
+    cutLine.style.height = '2px';
+    cutLine.style.background = 'repeating-linear-gradient(to right, #000 0px, #000 10px, transparent 10px, transparent 20px)';
+    cutLine.style.zIndex = '10';
+    cutLine.style.pointerEvents = 'none';
+    zineClone.appendChild(cutLine);
+  }
 
   /**
    * Add back side with reference image to PDF
    * @param {jsPDF} pdf - PDF document
    */
   async addBackSideToPDF(pdf) {
-        return new Promise((resolve, reject) => {
-          const backSideCanvas = document.createElement('canvas');
-          const backSideContext = backSideCanvas.getContext('2d');
+    return new Promise((resolve, reject) => {
+      const backSideCanvas = document.createElement('canvas');
+      const backSideContext = backSideCanvas.getContext('2d');
+      const dimensions = this.ui.getPaperDimensions(this.paperSize || 'a4', this.orientation || 'landscape');
+      backSideCanvas.width = dimensions.width * 4;
+      backSideCanvas.height = dimensions.height * 4;
+
+      const referenceImg = new Image();
+      referenceImg.crossOrigin = 'anonymous';
+      referenceImg.onload = () => {
+        try {
+          backSideContext.save();
+          backSideContext.translate(backSideCanvas.width / 2, backSideCanvas.height / 2);
+          backSideContext.rotate(Math.PI);
+          backSideContext.drawImage(referenceImg, -backSideCanvas.width / 2, -backSideCanvas.height / 2, backSideCanvas.width, backSideCanvas.height);
+          backSideContext.restore();
+
+          const backSideData = backSideCanvas.toDataURL('image/png', 1.0);
           const dimensions = this.ui.getPaperDimensions(this.paperSize || 'a4', this.orientation || 'landscape');
-          backSideCanvas.width = dimensions.width * 4;
-          backSideCanvas.height = dimensions.height * 4;
-
-          const referenceImg = new Image();
-          referenceImg.crossOrigin = 'anonymous';
-          referenceImg.onload = () => {
-            try {
-              backSideContext.save();
-              backSideContext.translate(backSideCanvas.width / 2, backSideCanvas.height / 2);
-              backSideContext.rotate(Math.PI);
-              backSideContext.drawImage(referenceImg, -backSideCanvas.width / 2, -backSideCanvas.height / 2, backSideCanvas.width, backSideCanvas.height);
-              backSideContext.restore();
-
-              const backSideData = backSideCanvas.toDataURL('image/png', 1.0);
-              const dimensions = this.ui.getPaperDimensions(this.paperSize || 'a4', this.orientation || 'landscape');
-              pdf.addImage(backSideData, 'PNG', 0, 0, dimensions.width, dimensions.height);
-              resolve();
-            } catch (error) {
-              reject(error);
-            }
-          };
-          referenceImg.onerror = () => reject(new Error('Failed to load reference image'));
-          referenceImg.src = this.referenceImageUrl;
-        });
-      }
-    }
-
-    // Initialize the application when DOM is ready
-    document.addEventListener('DOMContentLoaded', () => {
-      new PDFZineMaker();
+          pdf.addImage(backSideData, 'PNG', 0, 0, dimensions.width, dimensions.height);
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      };
+      referenceImg.onerror = () => reject(new Error('Failed to load reference image'));
+      referenceImg.src = this.referenceImageUrl;
     });
+  }
+}
+
+// Initialize the application when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  new PDFZineMaker();
+});
