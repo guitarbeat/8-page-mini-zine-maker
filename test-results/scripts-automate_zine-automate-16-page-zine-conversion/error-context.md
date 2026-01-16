@@ -1,0 +1,154 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - button "Switch to dark mode" [ref=e2] [cursor=pointer]:
+    - img [ref=e3]
+  - generic [ref=e5]:
+    - banner [ref=e6]:
+      - generic [ref=e7]:
+        - heading "Octovo Zine Maker" [level=1] [ref=e8]
+        - paragraph [ref=e9]: Convert PDF files into printable 8-page zines
+      - toolbar "Document actions" [ref=e10]:
+        - button "Print the zine layout Print" [ref=e11] [cursor=pointer]:
+          - img [ref=e12]
+          - generic [ref=e16]: Print the zine layout
+          - text: Print
+        - button "Export zine as PDF file Export" [active] [ref=e17] [cursor=pointer]:
+          - img [ref=e18]
+          - generic [ref=e21]: Export zine as PDF file
+          - text: Export
+        - button "Open settings panel" [ref=e22] [cursor=pointer]:
+          - img [ref=e23]
+    - generic [ref=e26]:
+      - button "Upload PDF file" [ref=e27] [cursor=pointer]:
+        - img [ref=e28]
+        - heading "Drop PDF here or browse files" [level=3] [ref=e31]
+        - paragraph [ref=e32]: Supports 8 or 16 page layouts
+      - paragraph [ref=e33]: PDF processed successfully. Ready to print or export.
+    - generic [ref=e35]:
+      - generic [ref=e36]:
+        - heading "Page Scale" [level=3] [ref=e37]
+        - paragraph [ref=e38]: Adjust the size of your zine pages for optimal printing
+      - generic [ref=e39]:
+        - generic [ref=e40]:
+          - generic [ref=e41]: Scale
+          - generic [ref=e42]: 100%
+        - slider "Scale" [ref=e43] [cursor=pointer]: "100"
+        - generic [ref=e44]:
+          - button "Set scale to 50%" [ref=e45]: 50%
+          - button "Set scale to 100%" [ref=e46]: 100%
+          - button "Set scale to 200%" [ref=e47]: 200%
+      - option "A4 (210 × 297 mm)" [selected]
+      - option "A3 (297 × 420 mm)"
+      - option "Letter (8.5 × 11 in)"
+      - option "Legal (8.5 × 14 in)"
+      - option "A5 (148 × 210 mm)"
+      - option "Landscape" [selected]
+      - option "Portrait"
+      - tabpanel [ref=e48]:
+        - article [ref=e49]:
+          - generic [ref=e50]:
+            - generic [ref=e51]: "1"
+            - generic [ref=e52]:
+              - img [ref=e54]
+              - generic [ref=e58]:
+                - heading "Front Cover" [level=4] [ref=e59]
+                - paragraph [ref=e60]: Your story begins here
+              - generic [ref=e61]:
+                - generic [ref=e62]: Upload PDF to see your content here
+                - img [ref=e64]
+            - img "Page 1 preview" [ref=e67]
+        - article [ref=e68]:
+          - generic [ref=e69]:
+            - generic [ref=e70]: "2"
+            - generic [ref=e71]:
+              - text: Will be rotated in final print
+              - img [ref=e73]
+              - generic [ref=e76]:
+                - heading "Inside Front" [level=4] [ref=e77]
+                - paragraph [ref=e78]: Introduction or foreword
+              - generic [ref=e79]:
+                - generic [ref=e80]: Upload PDF to see your content here
+                - img [ref=e82]
+            - img "Page 2 preview" [ref=e85]
+          - text: ↻
+        - article [ref=e86]:
+          - generic [ref=e87]:
+            - generic [ref=e88]: "3"
+            - generic [ref=e89]:
+              - text: Will be rotated in final print
+              - img [ref=e91]
+              - generic [ref=e94]:
+                - heading "Page Content" [level=4] [ref=e95]
+                - paragraph [ref=e96]: Main content area
+              - generic [ref=e97]:
+                - generic [ref=e98]: Upload PDF to see your content here
+                - img [ref=e100]
+            - img "Page 3 preview" [ref=e103]
+          - text: ↻
+        - article [ref=e104]:
+          - generic [ref=e105]:
+            - generic [ref=e106]: "4"
+            - generic [ref=e107]:
+              - text: Will be rotated in final print
+              - img [ref=e109]
+              - generic [ref=e111]:
+                - heading "Center Spread" [level=4] [ref=e112]
+                - paragraph [ref=e113]: Focal point of your zine
+              - generic [ref=e114]:
+                - generic [ref=e115]: Upload PDF to see your content here
+                - img [ref=e117]
+            - img "Page 4 preview" [ref=e120]
+          - text: ↻
+        - article [ref=e121]:
+          - generic [ref=e122]:
+            - generic [ref=e123]: "5"
+            - generic [ref=e124]:
+              - text: Will be rotated in final print
+              - img [ref=e126]
+              - generic [ref=e128]:
+                - heading "More Content" [level=4] [ref=e129]
+                - paragraph [ref=e130]: Continue your story
+              - generic [ref=e131]:
+                - generic [ref=e132]: Upload PDF to see your content here
+                - img [ref=e134]
+            - img "Page 5 preview" [ref=e137]
+          - text: ↻
+        - article [ref=e138]:
+          - generic [ref=e139]:
+            - generic [ref=e140]: "6"
+            - generic [ref=e141]:
+              - img [ref=e143]
+              - generic [ref=e147]:
+                - heading "Visual Break" [level=4] [ref=e148]
+                - paragraph [ref=e149]: Artwork or illustration
+              - generic [ref=e150]:
+                - generic [ref=e151]: Upload PDF to see your content here
+                - img [ref=e153]
+            - img "Page 6 preview" [ref=e156]
+        - article [ref=e157]:
+          - generic [ref=e158]:
+            - generic [ref=e159]: "7"
+            - generic [ref=e160]:
+              - img [ref=e162]
+              - generic [ref=e165]:
+                - heading "Back Inside" [level=4] [ref=e166]
+                - paragraph [ref=e167]: Conclusion or credits
+              - generic [ref=e168]:
+                - generic [ref=e169]: Upload PDF to see your content here
+                - img [ref=e171]
+            - img "Page 7 preview" [ref=e174]
+        - article [ref=e175]:
+          - generic [ref=e176]:
+            - generic [ref=e177]: "8"
+            - generic [ref=e178]:
+              - img [ref=e180]
+              - generic [ref=e183]:
+                - heading "Back Cover" [level=4] [ref=e184]
+                - paragraph [ref=e185]: Contact info & close
+              - generic [ref=e186]:
+                - generic [ref=e187]: Upload PDF to see your content here
+                - img [ref=e189]
+            - img "Page 8 preview" [ref=e192]
+```

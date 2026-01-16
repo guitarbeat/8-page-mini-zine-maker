@@ -457,29 +457,6 @@ class PDFZineMaker {
       tempContainer.style.padding = '0';
       tempContainer.style.margin = '0';
 
-      // Clone and prepare zine for export
-      const zineClone = this.ui.elements.zine.cloneNode(true);
-      this.prepareZineForExport(zineClone);
-
-      tempContainer.appendChild(zineClone);
-      document.body.appendChild(tempContainer);
-
-      // Configure html2canvas
-      window.html2canvas.logging = false;
-
-      // Capture zine as canvas
-      const canvas = await html2canvas(zineClone, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        width: dimensions.width * 4,
-        height: dimensions.height * 4
-      });
-
-      // Clean up temporary container
-      document.body.removeChild(tempContainer);
-
       // Create PDF
       const pdf = new jsPDF({
         orientation: this.orientation || 'landscape',
@@ -487,13 +464,60 @@ class PDFZineMaker {
         format: this.paperSize || 'a4'
       });
 
-      // Add front side
-      const imgData = canvas.toDataURL('image/png', 1.0);
-      pdf.addImage(imgData, 'PNG', 0, 0, dimensions.width, dimensions.height);
+      // Add temp container to DOM
+      document.body.appendChild(tempContainer);
 
-      // Add back side
-      pdf.addPage();
-      await this.addBackSideToPDF(pdf);
+      const processZine = async (zineIndex) => {
+        // Switch view if needed
+        if (this.allPageImages.filter(img => img).length > 8) {
+          this.updateZineView(zineIndex);
+          // Allow DOM to update
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        // Clone and prepare zine for export
+        const zineClone = this.ui.elements.zine.cloneNode(true);
+        this.prepareZineForExport(zineClone);
+
+        // Clear temp container
+        tempContainer.innerHTML = '';
+        tempContainer.appendChild(zineClone);
+
+        // Capture zine as canvas
+        const canvas = await html2canvas(zineClone, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          width: dimensions.width * 4,
+          height: dimensions.height * 4
+        });
+
+        // Add front side
+        const imgData = canvas.toDataURL('image/png', 1.0);
+        if (zineIndex > 1) pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, 0, dimensions.width, dimensions.height);
+
+        // Add back side
+        pdf.addPage();
+        await this.addBackSideToPDF(pdf);
+      };
+
+      if (this.allPageImages.filter(img => img).length > 8) {
+        // Render Zine 1 and Zine 2
+        console.log('Exporting 16-page zine (2 parts)...');
+        await processZine(1);
+        await processZine(2);
+        // Restore view to 1
+        this.updateZineView(1);
+      } else {
+        // Standard single zine
+        console.log('Exporting 8-page zine...');
+        await processZine(1);
+      }
+
+      // Clean up temporary container
+      document.body.removeChild(tempContainer);
 
       // Generate filename and save
       const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
