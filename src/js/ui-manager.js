@@ -1,6 +1,6 @@
 // Modern UI management class
 
-import { $, $$, addClass, removeClass, toggleClass, hasClass, debounce } from './utils.js';
+import { $, $$, addClass, removeClass, debounce } from './utils.js';
 import { toast } from './toast.js';
 
 export class UIManager {
@@ -50,7 +50,10 @@ export class UIManager {
       orientationSelect: $('#orientation-select'),
       settingsCloseBtn: $('.settings-close'),
       settingsOverlay: $('.settings-overlay'),
-      toastContainer: $('#toast-container')
+      toastContainer: $('#toast-container'),
+      zineTabs: $('#zine-tabs'),
+      zineTab1: $('#zine-tab-1'),
+      zineTab2: $('#zine-tab-2')
     };
   }
 
@@ -59,8 +62,8 @@ export class UIManager {
    */
   setupTheme() {
     this.isDarkMode = localStorage.getItem('theme') === 'dark' ||
-                     (!localStorage.getItem('theme') &&
-                      window.matchMedia('(prefers-color-scheme: dark)').matches);
+      (!localStorage.getItem('theme') &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches);
 
     this.updateTheme();
     this.updateThemeToggleAria();
@@ -228,7 +231,7 @@ export class UIManager {
 
     // Enter or Space on upload zone
     if ((e.key === 'Enter' || e.key === ' ') &&
-        e.target === this.elements.uploadZone) {
+      e.target === this.elements.uploadZone) {
       e.preventDefault();
       this.triggerFileUpload();
     }
@@ -349,14 +352,17 @@ export class UIManager {
    * @param {string} dataUrl - Image data URL
    */
   updatePagePreview(pageNum, dataUrl) {
-    const imgElement = $(`#preview-${pageNum}`);
+    // Map pages 9-16 to 1-8 for display
+    const displayNum = pageNum > 8 ? pageNum - 8 : pageNum;
+    const imgElement = $(`#preview-${displayNum}`);
+
     if (!imgElement) {
-      console.error(`Preview image element for page ${pageNum} not found`);
+      console.error(`Preview image element for page ${pageNum} (mapped to ${displayNum}) not found`);
       return;
     }
 
     // Hide placeholder immediately when we start loading
-    const placeholder = $(`#content-${pageNum} .placeholder`);
+    const placeholder = $(`#content-${displayNum} .placeholder`);
     if (placeholder) {
       placeholder.style.transition = 'opacity 0.3s ease';
       placeholder.style.opacity = '0';

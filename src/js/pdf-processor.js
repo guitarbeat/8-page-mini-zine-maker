@@ -1,7 +1,7 @@
 // Modern PDF processing class
 
-import { toast } from './toast.js';
-import { formatFileSize, delay } from './utils.js';
+import * as pdfjsLib from 'pdfjs-dist';
+import { formatFileSize } from './utils.js';
 
 export class PDFProcessor {
   constructor() {
@@ -13,12 +13,10 @@ export class PDFProcessor {
    * Initialize PDF.js worker
    */
   async initialize() {
-    if (typeof pdfjsLib !== 'undefined' && pdfjsLib.GlobalWorkerOptions) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-        'pdfjs-dist/build/pdf.worker.min.js',
-        import.meta.url
-      ).toString();
-    }
+    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+      'pdfjs-dist/build/pdf.worker.min.mjs',
+      import.meta.url
+    ).toString();
   }
 
   /**
@@ -162,7 +160,7 @@ export class PDFProcessor {
       // Render page to canvas
       const renderContext = {
         canvasContext: context,
-        viewport: viewport,
+        viewport,
         background: 'white'
       };
 
