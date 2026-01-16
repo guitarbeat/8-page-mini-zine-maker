@@ -1,10 +1,12 @@
 // Modern UI management class
-
-import { $, $$, addClass, removeClass, debounce } from './utils.js';
+import mitt from 'mitt';
+import clsx from 'clsx';
+import { debounce } from './utils.js';
 import { toast } from './toast.js';
 
 export class UIManager {
   constructor() {
+    this.emitter = mitt();
     this.elements = {};
     this.currentScale = 100;
     this.isDarkMode = false;
@@ -28,6 +30,8 @@ export class UIManager {
    * Cache DOM elements for performance
    */
   cacheElements() {
+    const $ = (selector) => document.querySelector(selector);
+
     this.elements = {
       zine: $('.zine'),
       printBtn: $('#printBtn'),
@@ -74,14 +78,10 @@ export class UIManager {
    */
   updateTheme() {
     const html = document.documentElement;
-    if (this.isDarkMode) {
-      html.setAttribute('data-theme', 'dark');
-      this.elements.themeIcon.innerHTML = '<path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>';
-    } else {
-      html.setAttribute('data-theme', 'light');
-      this.elements.themeIcon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
-    }
+    html.setAttribute('data-theme', this.isDarkMode ? 'dark' : 'light');
+
     localStorage.setItem('theme', this.isDarkMode ? 'dark' : 'light');
+    this.emitter.emit('themeChanged', { isDarkMode: this.isDarkMode });
   }
 
   /**
@@ -120,20 +120,15 @@ export class UIManager {
 
     // Zine tabs
     this.elements.zineTab1?.addEventListener('click', () => {
-      this.elements.zineTab1.classList.add('active');
-      this.elements.zineTab2.classList.remove('active');
-      this.elements.zineTab1.setAttribute('aria-selected', 'true');
-      this.elements.zineTab2.setAttribute('aria-selected', 'false');
-      this.emit('zineTabChanged', 1);
+      this.setActiveTab(1);
+      this.emitter.emit('zineTabChanged', 1);
     });
 
     this.elements.zineTab2?.addEventListener('click', () => {
-      this.elements.zineTab2.classList.add('active');
-      this.elements.zineTab1.classList.remove('active');
-      this.elements.zineTab2.setAttribute('aria-selected', 'true');
-      this.elements.zineTab1.setAttribute('aria-selected', 'false');
-      this.emit('zineTabChanged', 2);
+      this.setActiveTab(2);
+      this.emitter.emit('zineTabChanged', 2);
     });
+
     this.elements.paperSizeSelect?.addEventListener('change', (e) => this.updatePaperSize(e.target.value));
     this.elements.orientationSelect?.addEventListener('change', (e) => this.updateOrientation(e.target.value));
 
@@ -157,6 +152,15 @@ export class UIManager {
 
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => this.handleKeyboard(e));
+  }
+
+  setActiveTab(tabNum) {
+    if (this.elements.zineTab1 && this.elements.zineTab2) {
+      this.elements.zineTab1.className = clsx('tab-btn', { active: tabNum === 1 });
+      this.elements.zineTab2.className = clsx('tab-btn', { active: tabNum === 2 });
+      this.elements.zineTab1.setAttribute('aria-selected', (tabNum === 1).toString());
+      this.elements.zineTab2.setAttribute('aria-selected', (tabNum === 2).toString());
+    }
   }
 
   /**
@@ -186,7 +190,9 @@ export class UIManager {
   handleDragOver(e) {
     e.preventDefault();
     e.stopPropagation();
-    addClass(this.elements.uploadZone, 'dragover');
+    if (this.elements.uploadZone) {
+      this.elements.uploadZone.className = clsx(this.elements.uploadZone.className, 'dragover');
+    }
   }
 
   /**
@@ -198,8 +204,8 @@ export class UIManager {
     e.stopPropagation();
 
     // Only remove class if we're actually leaving the upload zone
-    if (!this.elements.uploadZone.contains(e.relatedTarget)) {
-      removeClass(this.elements.uploadZone, 'dragover');
+    if (this.elements.uploadZone && !this.elements.uploadZone.contains(e.relatedTarget)) {
+      this.elements.uploadZone.classList.remove('dragover');
     }
   }
 
@@ -210,13 +216,13 @@ export class UIManager {
   handleFileDrop(e) {
     e.preventDefault();
     e.stopPropagation();
-    removeClass(this.elements.uploadZone, 'dragover');
+    this.elements.uploadZone?.classList.remove('dragover');
 
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       const file = files[0];
       if (file.type === 'application/pdf') {
-        this.emit('fileSelected', { file, source: 'drop' });
+        this.emitter.emit('fileSelected', { file, source: 'drop' });
       } else {
         toast.error('Invalid File', 'Please drop a PDF file');
       }
@@ -237,13 +243,13 @@ export class UIManager {
     // Ctrl+P for print
     if (e.ctrlKey && e.key === 'p') {
       e.preventDefault();
-      this.emit('print');
+      this.emitter.emit('print');
     }
 
     // Ctrl+S for export
     if (e.ctrlKey && e.key === 's') {
       e.preventDefault();
-      this.emit('export');
+      this.emitter.emit('export');
     }
 
     // Enter or Space on upload zone
@@ -271,21 +277,21 @@ export class UIManager {
 
     // Apply scale to zine container
     if (this.elements.zine) {
-      addClass(this.elements.zine, 'scaled');
+      this.elements.zine.classList.add('scaled');
       this.elements.zine.style.transform = `scale(${this.currentScale / 100})`;
     }
 
     // Apply scale to page contents
-    const pageContents = $$('.page-content');
+    const pageContents = document.querySelectorAll('.page-content');
     pageContents.forEach(content => {
-      addClass(content, 'scaled');
+      content.classList.add('scaled');
       content.style.transform = `scale(${this.currentScale / 100})`;
     });
 
     // Apply scale to images
-    const images = $$('.page-content img');
+    const images = document.querySelectorAll('.page-content img');
     images.forEach(img => {
-      addClass(img, 'scaled');
+      img.classList.add('scaled');
       img.style.transform = `scale(${this.currentScale / 100})`;
     });
   }
@@ -314,12 +320,17 @@ export class UIManager {
    * @param {boolean} processing - Whether processing is active
    */
   setUploadZoneProcessing(processing) {
-    if (processing) {
-      this.elements.uploadZone?.classList.add('processing');
-      this.elements.uploadZone?.setAttribute('aria-disabled', 'true');
-    } else {
-      this.elements.uploadZone?.classList.remove('processing');
-      this.elements.uploadZone?.removeAttribute('aria-disabled');
+    if (this.elements.uploadZone) {
+      this.elements.uploadZone.className = clsx(
+        this.elements.uploadZone.className,
+        { processing }
+      );
+
+      if (processing) {
+        this.elements.uploadZone.setAttribute('aria-disabled', 'true');
+      } else {
+        this.elements.uploadZone.removeAttribute('aria-disabled');
+      }
     }
   }
 
@@ -343,23 +354,15 @@ export class UIManager {
   setStatus(text, type = 'info') {
     if (this.elements.uploadStatus) {
       this.elements.uploadStatus.textContent = text;
-      this.elements.uploadStatus.className = 'text-center text-muted';
 
-      // Remove existing status classes
-      removeClass(this.elements.uploadStatus, 'text-green-600', 'text-red-500', 'text-blue-600', 'font-bold');
-
-      // Add new status class
-      switch (type) {
-        case 'success':
-          addClass(this.elements.uploadStatus, 'text-green-600', 'font-bold');
-          break;
-        case 'error':
-          addClass(this.elements.uploadStatus, 'text-red-500', 'font-bold');
-          break;
-        case 'loading':
-          addClass(this.elements.uploadStatus, 'text-blue-600', 'font-bold');
-          break;
-      }
+      this.elements.uploadStatus.className = clsx(
+        'text-center text-muted',
+        {
+          'text-green-600 font-bold': type === 'success',
+          'text-red-500 font-bold': type === 'error',
+          'text-blue-600 font-bold': type === 'loading'
+        }
+      );
     }
   }
 
@@ -371,7 +374,7 @@ export class UIManager {
   updatePagePreview(pageNum, dataUrl) {
     // Map pages 9-16 to 1-8 for display
     const displayNum = pageNum > 8 ? pageNum - 8 : pageNum;
-    const imgElement = $(`#preview-${displayNum}`);
+    const imgElement = document.querySelector(`#preview-${displayNum}`);
 
     if (!imgElement) {
       console.error(`Preview image element for page ${pageNum} (mapped to ${displayNum}) not found`);
@@ -379,7 +382,7 @@ export class UIManager {
     }
 
     // Hide placeholder immediately when we start loading
-    const placeholder = $(`#content-${displayNum} .placeholder`);
+    const placeholder = document.querySelector(`#content-${displayNum} .placeholder`);
     if (placeholder) {
       placeholder.style.transition = 'opacity 0.3s ease';
       placeholder.style.opacity = '0';
@@ -387,8 +390,8 @@ export class UIManager {
 
     // Set up image load handlers
     imgElement.onload = () => {
-      console.log(`Page ${pageNum} preview loaded successfully`);
-      addClass(imgElement, 'scale-in');
+      // console.log(`Page ${pageNum} preview loaded successfully`);
+      imgElement.classList.add('scale-in');
 
       // Hide placeholder completely after image loads
       if (placeholder) {
@@ -411,7 +414,6 @@ export class UIManager {
     // Set the image source
     try {
       imgElement.src = dataUrl;
-      console.log(`Setting page ${pageNum} preview src, data URL length: ${dataUrl.length}`);
     } catch (error) {
       console.error(`Error setting page ${pageNum} preview src:`, error);
       if (placeholder) {
@@ -426,7 +428,7 @@ export class UIManager {
    * @returns {boolean} True if content is loaded
    */
   hasContent() {
-    const images = $$('.page-content img');
+    const images = document.querySelectorAll('.page-content img');
     return Array.from(images).some(img => img.src && img.src !== '');
   }
 
@@ -452,12 +454,14 @@ export class UIManager {
    * @param {boolean} visible - Whether to show the settings panel
    */
   setSettingsVisible(visible) {
-    if (visible) {
-      this.elements.settingsPanel?.classList.remove('hidden');
-      this.elements.settingsBtn?.setAttribute('aria-expanded', 'true');
-    } else {
-      this.elements.settingsPanel?.classList.add('hidden');
-      this.elements.settingsBtn?.setAttribute('aria-expanded', 'false');
+    if (this.elements.settingsPanel) {
+      if (visible) {
+        this.elements.settingsPanel.classList.remove('hidden');
+        this.elements.settingsBtn?.setAttribute('aria-expanded', 'true');
+      } else {
+        this.elements.settingsPanel.classList.add('hidden');
+        this.elements.settingsBtn?.setAttribute('aria-expanded', 'false');
+      }
     }
   }
 
@@ -481,13 +485,23 @@ export class UIManager {
   }
 
   /**
-   * Event emitter pattern
+   * Event emitter pattern wrapper for mitt
    * @param {string} event - Event name
    * @param {*} data - Event data
    */
   emit(event, data) {
-    const customEvent = new CustomEvent(event, { detail: data });
-    document.dispatchEvent(customEvent);
+    this.emitter.emit(event, data);
+  }
+
+  /**
+   * Event listener wrapper for mitt
+   */
+  on(event, handler) {
+    this.emitter.on(event, handler);
+  }
+
+  off(event, handler) {
+    this.emitter.off(event, handler);
   }
 
   /**
@@ -513,7 +527,7 @@ export class UIManager {
   updatePaperSize(paperSize) {
     this.paperSize = paperSize;
     localStorage.setItem('paperSize', paperSize);
-    this.emit('paperSizeChanged', { paperSize, orientation: this.orientation });
+    this.emitter.emit('paperSizeChanged', { paperSize, orientation: this.orientation });
     toast.info('Paper Size', `Changed to ${this.getPaperSizeLabel(paperSize)}`);
   }
 
@@ -524,7 +538,7 @@ export class UIManager {
   updateOrientation(orientation) {
     this.orientation = orientation;
     localStorage.setItem('orientation', orientation);
-    this.emit('orientationChanged', { paperSize: this.paperSize, orientation });
+    this.emitter.emit('orientationChanged', { paperSize: this.paperSize, orientation });
     toast.info('Orientation', `Changed to ${orientation.charAt(0).toUpperCase() + orientation.slice(1)}`);
   }
 
@@ -574,19 +588,12 @@ export class UIManager {
    * @param {boolean} visible - Whether to show tabs
    */
   toggleTabs(visible) {
-    if (visible) {
-      if (this.elements.zineTabs) this.elements.zineTabs.classList.remove('hidden');
-    } else {
-      if (this.elements.zineTabs) this.elements.zineTabs.classList.add('hidden');
+    if (this.elements.zineTabs) {
+      if (visible) {
+        this.elements.zineTabs.classList.remove('hidden');
+      } else {
+        this.elements.zineTabs.classList.add('hidden');
+      }
     }
-  }
-
-  /**
-   * Event listener
-   * @param {string} event - Event name
-   * @param {Function} callback - Event callback
-   */
-  on(event, callback) {
-    document.addEventListener(event, (e) => callback(e.detail));
   }
 }

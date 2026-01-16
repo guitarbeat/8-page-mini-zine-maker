@@ -33,7 +33,7 @@ export function isNumber(value) {
  * @returns {string} Formatted file size
  */
 export function formatFileSize(bytes) {
-  if (!isNumber(bytes)) {return '0 B';}
+  if (!isNumber(bytes)) { return '0 B'; }
 
   const units = ['B', 'KB', 'MB', 'GB'];
   let size = bytes;
@@ -54,71 +54,4 @@ export function formatFileSize(bytes) {
  */
 export function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-/**
- * Safe DOM element getter with error handling
- * @param {string} selector - CSS selector
- * @param {Element} context - Context element (defaults to document)
- * @returns {Element|null} Found element or null
- */
-export function $(selector, context = document) {
-  try {
-    return context.querySelector(selector);
-  } catch (error) {
-    console.error(`Invalid selector: ${selector}`, error);
-    return null;
-  }
-}
-
-/**
- * Safe DOM elements getter with error handling
- * @param {string} selector - CSS selector
- * @param {Element} context - Context element (defaults to document)
- * @returns {NodeList} Found elements
- */
-export function $$(selector, context = document) {
-  try {
-    return context.querySelectorAll(selector);
-  } catch (error) {
-    console.error(`Invalid selector: ${selector}`, error);
-    return [];
-  }
-}
-
-/**
- * Check if an element has a CSS class
- * @param {Element} element - DOM element
- * @param {string} className - CSS class name
- * @returns {boolean} True if element has the class
- */
-export function hasClass(element, className) {
-  return element?.classList?.contains(className) ?? false;
-}
-
-/**
- * Add CSS class to element
- * @param {Element} element - DOM element
- * @param {string} className - CSS class name
- */
-export function addClass(element, className) {
-  element?.classList?.add(className);
-}
-
-/**
- * Remove CSS class from element
- * @param {Element} element - DOM element
- * @param {string} className - CSS class name
- */
-export function removeClass(element, className) {
-  element?.classList?.remove(className);
-}
-
-/**
- * Toggle CSS class on element
- * @param {Element} element - DOM element
- * @param {string} className - CSS class name
- */
-export function toggleClass(element, className) {
-  element?.classList?.toggle(className);
 }
