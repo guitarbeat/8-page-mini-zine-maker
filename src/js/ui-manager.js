@@ -570,6 +570,18 @@ export class UIManager {
   }
 
   /**
+   * Toggle zine tabs visibility
+   * @param {boolean} visible - Whether to show tabs
+   */
+  toggleTabs(visible) {
+    if (visible) {
+      if (this.elements.zineTabs) this.elements.zineTabs.classList.remove('hidden');
+    } else {
+      if (this.elements.zineTabs) this.elements.zineTabs.classList.add('hidden');
+    }
+  }
+
+  /**
    * Event listener
    * @param {string} event - Event name
    * @param {Function} callback - Event callback

@@ -10,7 +10,7 @@ test('automate 16-page zine conversion', async ({ page }) => {
     // 2. Prepare file upload
     console.log('Uploading PDF...');
     const fileInput = page.locator('#pdf-upload');
-    await fileInput.setInputFiles('test.pdf');
+    await fileInput.setInputFiles('aaron-made-me-do-this 2.pdf');
 
     // 3. Wait for processing to finish
     // We look for the progress container to disappear OR the success toast
