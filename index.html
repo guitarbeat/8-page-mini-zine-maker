@@ -21,6 +21,9 @@
 
     <title>Octovo Zine Maker</title>
     <link rel="stylesheet" href="src/css/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 
 <body>
@@ -574,9 +577,8 @@
                     });
 
 
-                    // PDF upload handler with improved image conversion
-                    pdfUpload.addEventListener('change', async (event) => {
-                        const file = event.target.files[0];
+                    // PDF upload handler function
+                    async function handleFileUpload(file) {
                         if (!file || file.type !== 'application/pdf') {
                             showToast('error', 'Invalid File', 'Please select a PDF file.');
                             return;
@@ -594,6 +596,15 @@
 
                                 updateProgress(PROGRESS_INITIAL_PERCENT, `PDF loaded with ${numPages} pages`);
                                 showToast('info', 'PDF Loaded', `Found ${numPages} pages. Starting conversion...`);
+
+                                // Clean up previous URLs
+                                if (allPageImages) {
+                                    allPageImages.forEach(url => {
+                                        if (url && url.startsWith('blob:')) {
+                                            URL.revokeObjectURL(url);
+                                        }
+                                    });
+                                }
 
                                 // Support up to 16 pages (two 8-page zines)
                                 const maxPages = Math.min(16, numPages);
@@ -633,9 +644,10 @@
 
                                     await page.render(renderContext).promise;
 
-                                    // Store the image data URL
-                                    const dataUrl = canvas.toDataURL('image/png', 1.0);
-                                    allPageImages[i - 1] = dataUrl;
+                                    // Store the image as Object URL (Blob) for performance
+                                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
+                                    const url = URL.createObjectURL(blob);
+                                    allPageImages[i - 1] = url;
 
                                     // Update progress
                                     const progress = PROGRESS_INITIAL_PERCENT + (i / maxPages) * PROGRESS_RANGE_PERCENT;
@@ -696,8 +708,8 @@
                         fileReader.readAsArrayBuffer(file);
                     }
 
-            // PDF upload handler
-            pdfUpload.addEventListener('change', (event) => {
+                    // PDF upload listener
+                    pdfUpload.addEventListener('change', (event) => {
                         const files = event.target.files;
                         if (files.length > 1) {
                             showToast('warning', 'Multiple Files', 'Please select only one PDF file at a time.');

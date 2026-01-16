@@ -3,7 +3,7 @@
 import { PDFProcessor } from './pdf-processor.js';
 import { UIManager } from './ui-manager.js';
 import { toast } from './toast.js';
-import { delay, formatFileSize } from './utils.js';
+import { formatFileSize } from './utils.js';
 
 class PDFZineMaker {
   constructor() {
@@ -60,12 +60,12 @@ class PDFZineMaker {
     };
 
     const missingLibraries = Object.entries(libraries)
-      .filter(([name, loaded]) => !loaded)
+      .filter(([, loaded]) => !loaded)
       .map(([name]) => name);
 
     if (missingLibraries.length > 0) {
       console.warn('Libraries not yet loaded:', missingLibraries.join(', '));
-      this.ui.setStatus(`Loading required libraries... Please wait.`, 'loading');
+      this.ui.setStatus('Loading required libraries... Please wait.', 'loading');
 
       // Wait for libraries to load
       setTimeout(() => this.checkLibraries(), 1000);
@@ -78,14 +78,14 @@ class PDFZineMaker {
   generatePagePlaceholders() {
     // Page content ideas for different positions in the zine
     const pageContent = {
-      1: { title: "Front Cover", desc: "Your story begins here", icon: "book-open" },
-      2: { title: "Inside Front", desc: "Introduction or foreword", icon: "file-text" },
-      3: { title: "Page Content", desc: "Main content area", icon: "edit" },
-      4: { title: "Center Spread", desc: "Focal point of your zine", icon: "star" },
-      5: { title: "More Content", desc: "Continue your story", icon: "arrow-right" },
-      6: { title: "Visual Break", desc: "Artwork or illustration", icon: "image" },
-      7: { title: "Back Inside", desc: "Conclusion or credits", icon: "check-circle" },
-      8: { title: "Back Cover", desc: "Contact info & close", icon: "mail" }
+      1: { title: 'Front Cover', desc: 'Your story begins here', icon: 'book-open' },
+      2: { title: 'Inside Front', desc: 'Introduction or foreword', icon: 'file-text' },
+      3: { title: 'Page Content', desc: 'Main content area', icon: 'edit' },
+      4: { title: 'Center Spread', desc: 'Focal point of your zine', icon: 'star' },
+      5: { title: 'More Content', desc: 'Continue your story', icon: 'arrow-right' },
+      6: { title: 'Visual Break', desc: 'Artwork or illustration', icon: 'image' },
+      7: { title: 'Back Inside', desc: 'Conclusion or credits', icon: 'check-circle' },
+      8: { title: 'Back Cover', desc: 'Contact info & close', icon: 'mail' }
     };
 
     // Pages that get rotated in the final zine layout
@@ -133,14 +133,14 @@ class PDFZineMaker {
    */
   createPlaceholderContent(pageNum, content) {
     const icons = {
-      'book-open': `<path d="M2 3h6a2 2 0 0 0 2 2v2H6v-2a2 2 0 0 0-2-2H2V3zm6 5v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8h6z"/><path d="M12 3h6a2 2 0 0 0 2 2v2h-6V5a2 2 0 0 0-2-2h-2V3z"/><path d="M18 8v9a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V8h6z"/>`,
-      'file-text': `<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>`,
-      'edit': `<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>`,
-      'star': `<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>`,
-      'arrow-right': `<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>`,
-      'image': `<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>`,
-      'check-circle': `<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>`,
-      'mail': `<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/>`
+      'book-open': '<path d="M2 3h6a2 2 0 0 0 2 2v2H6v-2a2 2 0 0 0-2-2H2V3zm6 5v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8h6z"/><path d="M12 3h6a2 2 0 0 0 2 2v2h-6V5a2 2 0 0 0-2-2h-2V3z"/><path d="M18 8v9a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V8h6z"/>',
+      'file-text': '<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>',
+      'edit': '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+      'star': '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+      'arrow-right': '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
+      'image': '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>',
+      'check-circle': '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+      'mail': '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/>'
     };
 
     return `
@@ -188,7 +188,7 @@ class PDFZineMaker {
         this.ui.showProgress(progress);
       });
 
-      const { pdf, numPages, fileName, fileSize } = result;
+      const { numPages, fileName, fileSize } = result;
       const maxPages = Math.min(8, numPages);
 
       this.ui.setStatus(`PDF loaded: ${fileName} (${formatFileSize(fileSize)}) - ${numPages} pages`);
@@ -396,7 +396,7 @@ class PDFZineMaker {
       window.html2canvas.logging = false;
 
       // Capture zine as canvas
-      const dimensions = this.ui.getPaperDimensions(this.paperSize || 'a4', this.orientation || 'landscape');
+      // Reuse dimensions calculated above
       const canvas = await html2canvas(zineClone, {
         scale: 2,
         useCORS: true,
@@ -419,7 +419,7 @@ class PDFZineMaker {
 
       // Add front side
       const imgData = canvas.toDataURL('image/png', 1.0);
-      const dimensions = this.ui.getPaperDimensions(this.paperSize || 'a4', this.orientation || 'landscape');
+      // Reuse dimensions calculated above
       pdf.addImage(imgData, 'PNG', 0, 0, dimensions.width, dimensions.height);
 
       // Add back side

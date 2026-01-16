@@ -1,7 +1,6 @@
 // Modern PDF processing class
 
-import { toast } from './toast.js';
-import { formatFileSize, delay } from './utils.js';
+import { formatFileSize } from './utils.js';
 
 export class PDFProcessor {
   constructor() {
@@ -162,7 +161,7 @@ export class PDFProcessor {
       // Render page to canvas
       const renderContext = {
         canvasContext: context,
-        viewport: viewport,
+        viewport,
         background: 'white'
       };
 

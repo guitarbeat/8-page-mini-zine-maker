@@ -33,7 +33,7 @@ export function isNumber(value) {
  * @returns {string} Formatted file size
  */
 export function formatFileSize(bytes) {
-  if (!isNumber(bytes)) return '0 B';
+  if (!isNumber(bytes)) {return '0 B';}
 
   const units = ['B', 'KB', 'MB', 'GB'];
   let size = bytes;

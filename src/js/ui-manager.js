@@ -1,6 +1,6 @@
 // Modern UI management class
 
-import { $, $$, addClass, removeClass, toggleClass, hasClass, debounce } from './utils.js';
+import { $, $$, addClass, removeClass, debounce } from './utils.js';
 import { toast } from './toast.js';
 
 export class UIManager {
