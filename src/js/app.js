@@ -194,12 +194,27 @@ class PDFZineMaker {
   }
 
   /**
+   * Revoke existing object URLs to free memory
+   */
+  revokePageImages() {
+    this.allPageImages.forEach(url => {
+      if (url && url.startsWith('blob:')) {
+        URL.revokeObjectURL(url);
+      }
+    });
+    this.allPageImages.fill(null);
+  }
+
+  /**
    * Process uploaded PDF file
    * @param {File} file - PDF file to process
    */
   async processPDF(file) {
     try {
       this.ui.showProgress('Starting PDF processing...', 0);
+
+      // Clean up previous images
+      this.revokePageImages();
 
       // Load PDF
       const result = await this.pdfProcessor.loadPDF(file, (progress) => {
@@ -236,8 +251,10 @@ class PDFZineMaker {
             this.ui.showProgress(progress, percent);
           });
 
-          const dataUrl = this.pdfProcessor.canvasToDataURL(canvas);
-          this.allPageImages[i - 1] = dataUrl;
+          // Use Blob/Object URL instead of Data URL for better performance
+          const blob = await this.pdfProcessor.canvasToBlob(canvas);
+          const objectUrl = URL.createObjectURL(blob);
+          this.allPageImages[i - 1] = objectUrl;
 
           // Only update preview if it belongs to current zine view
           const currentZineStart = (this.currentZine - 1) * 8;
@@ -245,7 +262,7 @@ class PDFZineMaker {
 
           if (i > currentZineStart && i <= currentZineEnd) {
             const displayNum = i > 8 ? i - 8 : i;
-            this.ui.updatePagePreview(displayNum, dataUrl);
+            this.ui.updatePagePreview(displayNum, objectUrl);
           }
 
           const percent = Math.round(i / maxPages * 100);
@@ -254,14 +271,14 @@ class PDFZineMaker {
         } catch (pageError) {
           console.error(`Failed to process page ${i}:`, pageError);
           toast.warning(`Page ${i} Error`, 'Using blank page as fallback');
-          this.createBlankPage(i);
+          await this.createBlankPage(i);
         }
       }
 
       // Handle remaining pages
       const targetPages = maxPages > 8 ? 16 : 8;
       for (let i = maxPages + 1; i <= targetPages; i++) {
-        this.createBlankPage(i);
+        await this.createBlankPage(i);
       }
 
       this.ui.hideProgress();
@@ -296,7 +313,7 @@ class PDFZineMaker {
    * Create a blank page as fallback
    * @param {number} pageNum - Page number
    */
-  createBlankPage(pageNum) {
+  async createBlankPage(pageNum) {
     const canvas = document.createElement('canvas');
     canvas.width = 1000;
     canvas.height = 1400;
@@ -310,16 +327,22 @@ class PDFZineMaker {
     ctx.textAlign = 'center';
     ctx.fillText('Blank Page', 500, 700);
 
-    const dataUrl = canvas.toDataURL('image/png');
-    this.allPageImages[pageNum - 1] = dataUrl;
+    // Use Blob/Object URL for consistency and performance
+    try {
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        const objectUrl = URL.createObjectURL(blob);
+        this.allPageImages[pageNum - 1] = objectUrl;
 
-    // Only update if visible in current zine
-    const currentZineStart = (this.currentZine - 1) * 8;
-    const currentZineEnd = this.currentZine * 8;
+        // Only update if visible in current zine
+        const currentZineStart = (this.currentZine - 1) * 8;
+        const currentZineEnd = this.currentZine * 8;
 
-    if (pageNum > currentZineStart && pageNum <= currentZineEnd) {
-      const displayNum = pageNum > 8 ? pageNum - 8 : pageNum;
-      this.ui.updatePagePreview(displayNum, dataUrl);
+        if (pageNum > currentZineStart && pageNum <= currentZineEnd) {
+          const displayNum = pageNum > 8 ? pageNum - 8 : pageNum;
+          this.ui.updatePagePreview(displayNum, objectUrl);
+        }
+    } catch (error) {
+        console.error('Error creating blank page blob:', error);
     }
   }
 

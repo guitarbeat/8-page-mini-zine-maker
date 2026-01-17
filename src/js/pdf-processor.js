@@ -193,6 +193,30 @@ export class PDFProcessor {
   }
 
   /**
+   * Convert canvas to Blob (async)
+   * @param {HTMLCanvasElement} canvas - Canvas to convert
+   * @param {string} format - Image format ('image/png' or 'image/jpeg')
+   * @param {number} quality - Image quality (0-1, only for JPEG)
+   * @returns {Promise<Blob>} Blob
+   */
+  canvasToBlob(canvas, format = 'image/jpeg', quality = 0.85) {
+    return new Promise((resolve, reject) => {
+      try {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            console.log(`Generated blob, format: ${format}, size: ${blob.size} bytes`);
+            resolve(blob);
+          } else {
+            reject(new Error('Canvas to Blob conversion failed'));
+          }
+        }, format, quality);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  /**
    * Handle PDF-specific errors
    * @param {Error} error - Original error
    * @returns {Error} Processed error
