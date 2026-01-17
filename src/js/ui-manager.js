@@ -45,6 +45,7 @@ export class UIManager {
       themeIcon: $('#themeIcon'),
       scaleSlider: $('#scale-slider'),
       scaleValue: $('#scale-value'),
+      tickLabels: document.querySelectorAll('.tick-label'),
       progressContainer: $('#progress-container'),
       progressFill: $('#progress-fill'),
       progressText: $('#progress-text'),
@@ -149,6 +150,22 @@ export class UIManager {
     this.elements.scaleSlider?.addEventListener('input', debounce((e) => {
       this.updateScale(parseInt(e.target.value));
     }, 100));
+
+    // Tick labels
+    this.elements.tickLabels?.forEach(tick => {
+      // Click interaction
+      tick.addEventListener('click', () => {
+        this.updateScale(parseInt(tick.dataset.value));
+      });
+
+      // Keyboard interaction
+      tick.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.updateScale(parseInt(tick.dataset.value));
+        }
+      });
+    });
 
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => this.handleKeyboard(e));

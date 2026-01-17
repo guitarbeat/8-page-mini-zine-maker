@@ -843,6 +843,23 @@ p {
     color: var(--color-text-muted);
 }
 
+.tick-label {
+    cursor: pointer;
+    transition: color var(--motion-fast) var(--ease-in-out);
+    padding: var(--space-xs);
+    border-radius: var(--radius-sm);
+}
+
+.tick-label:hover {
+    color: var(--color-accent);
+}
+
+.tick-label:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    color: var(--color-accent);
+}
+
 /* Progress Bar
    ========================================================================== */
 
