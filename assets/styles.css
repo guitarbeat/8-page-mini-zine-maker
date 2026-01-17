@@ -275,6 +275,11 @@ p {
     box-shadow: var(--shadow-sm);
 }
 
+.btn:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
 .btn-success {
     background: var(--color-success);
     color: var(--color-text-inverse);
@@ -313,9 +318,15 @@ p {
     overflow: hidden;
 }
 
-.upload-zone:hover {
+.upload-zone:hover,
+.upload-zone:focus-visible {
     border-color: var(--color-accent);
     background: var(--color-accent-light);
+}
+
+.upload-zone:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
 }
 
 .upload-zone.dragover {
@@ -485,6 +496,11 @@ p {
     transition: background var(--motion-base) var(--ease-in-out);
 }
 
+.slider:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
 .slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
@@ -622,10 +638,16 @@ p {
     transition: all var(--motion-base) var(--ease-in-out);
 }
 
-.theme-toggle:hover {
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
     transform: scale(1.05);
     box-shadow: var(--shadow-lg);
     border-color: var(--color-accent);
+}
+
+.theme-toggle:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
 }
 
 .theme-toggle svg {

@@ -1,3 +1,3 @@
-## 2024-02-14 - [Toast & Shortcut Accessibility]
-**Learning:** Toast notifications often lack `aria-live` regions and labeled close buttons, making them invisible or unusable for screen reader users. Additionally, keyboard shortcuts (Ctrl+O, etc.) are often undocumented for non-visual users.
-**Action:** Always add `aria-live="polite"` (or `assertive`) to toast containers and ensure icon-only close buttons have `aria-label`. Expose keyboard shortcuts via `title` (e.g., "Action (Key)") and `aria-keyshortcuts` for full accessibility.
+## 2025-01-28 - [Visible Focus States]
+**Learning:** `outline: none` removes the browser's default focus ring, making keyboard navigation difficult or impossible for sighted users. While custom hover states were present, the lack of an equivalent `:focus-visible` state left a critical accessibility gap.
+**Action:** When removing default outlines, always immediately pair `outline: none` with a `:focus-visible` rule that re-introduces a clear, high-contrast indicator (e.g., `outline: 2px solid var(--color-accent)`). Grouping `:hover` and `:focus-visible` styles can be efficient but ensure the visual treatment is appropriate for both contexts. Also, adding `aria-valuetext` to range inputs provides a more human-readable value for screen reader users.
