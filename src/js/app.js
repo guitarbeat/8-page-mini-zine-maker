@@ -86,12 +86,18 @@ class PDFZineMaker {
       this.selectedLayout = numPages > 8 ? 16 : 8;
       const maxPages = Math.min(this.selectedLayout, numPages);
 
-      // Handle UI state and description
-      const description = this.selectedLayout > 8
-        ? 'Rearranged into two 8-page layouts (16 pages total).'
-        : 'Rearranged into a standard 8-page mini-zine layout.';
+      // Determine template type based on page count
+      let templateType = 'mini-8';
+      let description = 'Rearranged into a standard 8-page mini-zine layout.';
 
-      this.ui.generateLayout(this.selectedLayout);
+      if (numPages > 8) {
+        templateType = 'accordion-16';
+        description = 'Rearranged into a 16-page accordion zine layout. Cut along the red lines after printing.';
+      }
+
+      this.currentTemplate = templateType;
+      this.ui.generateLayout(numPages, templateType);
+
 
       this.ui.setReady(true, description);
       this.allPageImages = new Array(16).fill(null);
@@ -193,6 +199,7 @@ class PDFZineMaker {
       return;
     }
 
+    const isAccordion = this.currentTemplate === 'accordion-16';
     const zineSheets = [];
 
     // Get HTML for all sheets
@@ -204,9 +211,80 @@ class PDFZineMaker {
     const scale = this.ui.elements.scaleSlider?.value / 100 || 1;
     const margin = this.ui.elements.marginSlider?.value || 0;
 
+    // Different grid CSS for accordion vs mini-8
+    const gridCss = isAccordion ? `
+      grid-template-areas:
+        "page4 page3 page2 page1"
+        "page5 page6 page7 page8"
+        "page12 page11 page10 page9"
+        "page13 page14 page15 page16";
+      grid-template-rows: repeat(4, 1fr);
+    ` : `
+      grid-template-areas:
+        "page5 page4 page3 page2"
+        "page6 page7 page8 page1";
+      grid-template-rows: repeat(2, 1fr);
+    `;
+
+    // Page area CSS for accordion includes pages 9-16
+    const accordionPageAreas = isAccordion ? `
+      .page-cell[data-page="9"] { grid-area: page9; }
+      .page-cell[data-page="10"] { grid-area: page10; }
+      .page-cell[data-page="11"] { grid-area: page11; }
+      .page-cell[data-page="12"] { grid-area: page12; }
+      .page-cell[data-page="13"] { grid-area: page13; }
+      .page-cell[data-page="14"] { grid-area: page14; }
+      .page-cell[data-page="15"] { grid-area: page15; }
+      .page-cell[data-page="16"] { grid-area: page16; }
+    ` : '';
+
+    // Rotation CSS for upside-down pages
+    const rotationCss = isAccordion ? `
+      .page-cell[data-page="1"], .page-cell[data-page="2"],
+      .page-cell[data-page="3"], .page-cell[data-page="4"],
+      .page-cell[data-page="9"], .page-cell[data-page="10"],
+      .page-cell[data-page="11"], .page-cell[data-page="12"] {
+        transform: rotate(180deg);
+      }
+    ` : `
+      .page-cell[data-page="2"], .page-cell[data-page="3"], 
+      .page-cell[data-page="4"], .page-cell[data-page="5"] {
+        transform: rotate(180deg);
+      }
+    `;
+
+    // Cut lines for accordion template
+    const cutLinesCss = isAccordion ? `
+      .cut-line {
+        position: absolute;
+        z-index: 30;
+        pointer-events: none;
+      }
+      .cut-line-left {
+        left: 0;
+        top: 0;
+        height: 75%;
+        width: 1mm;
+        border-left: 1mm dashed #ef4444;
+      }
+      .cut-line-right {
+        right: 0;
+        top: 0;
+        height: 75%;
+        width: 1mm;
+        border-right: 1mm dashed #ef4444;
+      }
+    ` : '';
+
+    const cutLinesHtml = isAccordion ? `
+      <div class="cut-line cut-line-left"></div>
+      <div class="cut-line cut-line-right"></div>
+    ` : '';
+
     const sheetsHtml = zineSheets.map((content) => `
       <div class="sheet">
         <div class="zine-grid">${content}</div>
+        ${cutLinesHtml}
       </div>
       <div class="sheet"><div class="back-side"></div></div>
     `).join('');
@@ -220,14 +298,11 @@ class PDFZineMaker {
           * { margin: 0; padding: 0; box-sizing: border-box; }
           @page { size: ${dimensions.width}mm ${dimensions.height}mm; margin: 0; }
           body { background: white; width: ${dimensions.width}mm; height: ${dimensions.height}mm; overflow: hidden; }
-          .sheet { width: 100%; height: 100%; page-break-after: always; display: block; overflow: hidden; }
+          .sheet { width: 100%; height: 100%; page-break-after: always; display: block; overflow: hidden; position: relative; }
           .zine-grid {
             display: grid;
-            grid-template-areas:
-                "page5 page4 page3 page2"
-                "page6 page7 page8 page1";
+            ${gridCss}
             grid-template-columns: repeat(4, 1fr);
-            grid-template-rows: repeat(2, 1fr);
             height: ${dimensions.height}mm;
             width: ${dimensions.width}mm;
           }
@@ -239,20 +314,17 @@ class PDFZineMaker {
             overflow: hidden;
             border: 0.1mm dashed #eee;
           }
-          .page-cell:nth-child(1) { grid-area: page1; }
-          .page-cell:nth-child(2) { grid-area: page2; }
-          .page-cell:nth-child(3) { grid-area: page3; }
-          .page-cell:nth-child(4) { grid-area: page4; }
-          .page-cell:nth-child(5) { grid-area: page5; }
-          .page-cell:nth-child(6) { grid-area: page6; }
-          .page-cell:nth-child(7) { grid-area: page7; }
-          .page-cell:nth-child(8) { grid-area: page8; }
+          .page-cell[data-page="1"] { grid-area: page1; }
+          .page-cell[data-page="2"] { grid-area: page2; }
+          .page-cell[data-page="3"] { grid-area: page3; }
+          .page-cell[data-page="4"] { grid-area: page4; }
+          .page-cell[data-page="5"] { grid-area: page5; }
+          .page-cell[data-page="6"] { grid-area: page6; }
+          .page-cell[data-page="7"] { grid-area: page7; }
+          .page-cell[data-page="8"] { grid-area: page8; }
+          ${accordionPageAreas}
           
-          /* Upside down pages for folding */
-          .page-cell:nth-child(2), .page-cell:nth-child(3), 
-          .page-cell:nth-child(4), .page-cell:nth-child(5) {
-            transform: rotate(180deg);
-          }
+          ${rotationCss}
           
           .page-content-img { 
             width: 100%; 
@@ -271,6 +343,8 @@ class PDFZineMaker {
             background-repeat: no-repeat;
             transform: rotate(180deg);
           }
+          
+          ${cutLinesCss}
         </style>
       </head>
       <body>
@@ -286,6 +360,7 @@ class PDFZineMaker {
       printWindow.close();
     }, 500);
   }
+
 
   async handleExport() {
     if (!this.ui.hasContent()) { return; }

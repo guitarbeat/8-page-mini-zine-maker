@@ -1,6 +1,6 @@
 // Modern UI management class
 import mitt from 'mitt';
-import { PAPER_SIZES } from './constants.js';
+import { PAPER_SIZES, ZINE_TEMPLATES } from './constants.js';
 import { toast } from './toast.js';
 
 export class UIManager {
@@ -150,11 +150,108 @@ export class UIManager {
 
   /**
    * Generate sheets and page placeholders
+   * @param {number} numPages - Number of pages in the PDF
+   * @param {string} templateType - Template type: 'mini-8', 'dual-16', or 'accordion-16'
    */
-  generateLayout(numPages = 8) {
+  generateLayout(numPages = 8, templateType = null) {
     if (!this.elements.zineSheetsContainer) { return; }
     this.elements.zineSheetsContainer.innerHTML = '';
 
+    // Auto-detect template if not specified
+    if (!templateType) {
+      if (numPages > 8) {
+        templateType = 'accordion-16'; // Default to accordion for 9-16 pages
+      } else {
+        templateType = 'mini-8';
+      }
+    }
+
+    this.currentTemplate = templateType;
+    const template = ZINE_TEMPLATES[templateType];
+
+    if (!template) {
+      console.error(`Unknown template: ${templateType}`);
+      return;
+    }
+
+    // For accordion-16, we use a single sheet with 4x4 grid
+    if (templateType === 'accordion-16') {
+      this.generateAccordionLayout(template);
+    } else {
+      // Mini-8 or dual-16 (two 8-page sheets)
+      this.generateMiniZineLayout(numPages, template);
+    }
+
+    this.updatePreviewLayout();
+    this.applyPageStyles();
+  }
+
+  /**
+   * Generate the accordion-16 layout (single sheet, 4x4 grid)
+   */
+  generateAccordionLayout(template) {
+    const sheetWrapper = document.createElement('div');
+    sheetWrapper.className = 'print-sheet w-full p-0 relative overflow-hidden rounded-sm';
+    sheetWrapper.setAttribute('data-sheet', 1);
+    sheetWrapper.setAttribute('data-template', 'accordion-16');
+
+    const grid = document.createElement('div');
+    grid.className = 'zine-grid accordion-16';
+    grid.id = 'zine-grid-sheet-1';
+
+    // Generate cells based on template layout
+    template.layout.forEach((item) => {
+      const cell = document.createElement('div');
+      cell.className = 'page-cell h-full w-full bg-white relative flex items-center justify-center overflow-hidden';
+      cell.setAttribute('data-page-index', item.page - 1);
+      cell.setAttribute('data-page', item.page);
+      cell.setAttribute('draggable', 'true');
+
+      const labelText = item.page === 1 ? 'Cover' : (item.page === 16 ? 'Back' : `Page ${item.page}`);
+
+      cell.innerHTML = `
+        <span class="page-label absolute top-2 left-2 px-2 py-1 bg-black text-white text-[10px] font-black rounded uppercase z-10">${labelText}</span>
+        <div class="page-placeholder text-gray-200 text-xs font-black uppercase tracking-widest">Empty</div>
+        <img alt="Page ${item.page}" class="page-content-img w-full h-full object-contain hidden" draggable="false" />
+      `;
+
+      this.setupDragAndDrop(cell);
+      grid.appendChild(cell);
+    });
+
+    sheetWrapper.appendChild(grid);
+
+    // Add fold guidelines for accordion
+    const guidelines = `
+      <div class="absolute top-1/4 left-0 w-full border-t border-blue-400/30 pointer-events-none"></div>
+      <div class="absolute top-1/2 left-0 w-full border-t border-blue-400/30 pointer-events-none"></div>
+      <div class="absolute top-3/4 left-0 w-full border-t border-blue-400/30 pointer-events-none"></div>
+      <div class="absolute top-0 left-1/4 h-full border-l border-blue-400/30 pointer-events-none"></div>
+      <div class="absolute top-0 left-1/2 h-full border-l border-blue-400/30 pointer-events-none"></div>
+      <div class="absolute top-0 left-3/4 h-full border-l border-blue-400/30 pointer-events-none"></div>
+    `;
+    sheetWrapper.insertAdjacentHTML('beforeend', guidelines);
+
+    // Add cut line indicators (left and right edges, through rows 1-3)
+    const cutLineLeft = document.createElement('div');
+    cutLineLeft.className = 'cut-line cut-line-left';
+    cutLineLeft.style.top = '0';
+    cutLineLeft.style.height = '75%'; // 3 of 4 rows
+    sheetWrapper.appendChild(cutLineLeft);
+
+    const cutLineRight = document.createElement('div');
+    cutLineRight.className = 'cut-line cut-line-right';
+    cutLineRight.style.top = '0';
+    cutLineRight.style.height = '75%'; // 3 of 4 rows
+    sheetWrapper.appendChild(cutLineRight);
+
+    this.elements.zineSheetsContainer.appendChild(sheetWrapper);
+  }
+
+  /**
+   * Generate mini-zine layout (8-page single or dual sheets)
+   */
+  generateMiniZineLayout(numPages, _template) {
     const numSheets = numPages > 8 ? 2 : 1;
 
     for (let s = 1; s <= numSheets; s++) {
@@ -171,6 +268,7 @@ export class UIManager {
         const cell = document.createElement('div');
         cell.className = 'page-cell h-full w-full bg-white relative flex items-center justify-center overflow-hidden';
         cell.setAttribute('data-page-index', pageIdx - 1);
+        cell.setAttribute('data-page', i);
         cell.setAttribute('draggable', 'true');
 
         const labelText = i === 1 ? 'Cover' : (i === 8 ? 'Back' : `Page ${i}`);
@@ -198,9 +296,6 @@ export class UIManager {
       sheetWrapper.insertAdjacentHTML('beforeend', guidelines);
       this.elements.zineSheetsContainer.appendChild(sheetWrapper);
     }
-
-    this.updatePreviewLayout();
-    this.applyPageStyles();
   }
 
   setupDragAndDrop(cell) {

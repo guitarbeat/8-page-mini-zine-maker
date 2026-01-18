@@ -111,11 +111,86 @@
         .page-cell[data-page="6"] { grid-area: page6; }
         .page-cell[data-page="7"] { grid-area: page7; }
         .page-cell[data-page="8"] { grid-area: page8; }
+        .page-cell[data-page="9"] { grid-area: page9; }
+        .page-cell[data-page="10"] { grid-area: page10; }
+        .page-cell[data-page="11"] { grid-area: page11; }
+        .page-cell[data-page="12"] { grid-area: page12; }
+        .page-cell[data-page="13"] { grid-area: page13; }
+        .page-cell[data-page="14"] { grid-area: page14; }
+        .page-cell[data-page="15"] { grid-area: page15; }
+        .page-cell[data-page="16"] { grid-area: page16; }
 
         .page-cell[data-page="2"], .page-cell[data-page="3"], 
         .page-cell[data-page="4"], .page-cell[data-page="5"] {
             transform: rotate(180deg);
         }
+        
+        /* Accordion-16 specific upside-down pages */
+        .zine-grid.accordion-16 .page-cell[data-page="1"],
+        .zine-grid.accordion-16 .page-cell[data-page="2"],
+        .zine-grid.accordion-16 .page-cell[data-page="3"],
+        .zine-grid.accordion-16 .page-cell[data-page="4"],
+        .zine-grid.accordion-16 .page-cell[data-page="9"],
+        .zine-grid.accordion-16 .page-cell[data-page="10"],
+        .zine-grid.accordion-16 .page-cell[data-page="11"],
+        .zine-grid.accordion-16 .page-cell[data-page="12"] {
+            transform: rotate(180deg);
+        }
+        /* Override default rotations for accordion template */
+        .zine-grid.accordion-16 .page-cell[data-page="5"],
+        .zine-grid.accordion-16 .page-cell[data-page="6"],
+        .zine-grid.accordion-16 .page-cell[data-page="7"],
+        .zine-grid.accordion-16 .page-cell[data-page="8"],
+        .zine-grid.accordion-16 .page-cell[data-page="13"],
+        .zine-grid.accordion-16 .page-cell[data-page="14"],
+        .zine-grid.accordion-16 .page-cell[data-page="15"],
+        .zine-grid.accordion-16 .page-cell[data-page="16"] {
+            transform: rotate(0deg);
+        }
+
+        /* Accordion grid 4x4 layout */
+        .zine-grid.accordion-16 {
+            grid-template-areas:
+                "page4 page3 page2 page1"
+                "page5 page6 page7 page8"
+                "page12 page11 page10 page9"
+                "page13 page14 page15 page16";
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+        }
+
+        /* Cut line indicators */
+        .cut-line {
+            position: absolute;
+            background: transparent;
+            z-index: 30;
+            pointer-events: none;
+        }
+        .cut-line::before {
+            content: '✂️';
+            position: absolute;
+            font-size: 16px;
+        }
+        .cut-line-left {
+            left: 0;
+            width: 3px;
+            border-left: 3px dashed #ef4444;
+        }
+        .cut-line-left::before {
+            left: 6px;
+            top: -2px;
+        }
+        .cut-line-right {
+            right: 0;
+            width: 3px;
+            border-right: 3px dashed #ef4444;
+        }
+        .cut-line-right::before {
+            right: 6px;
+            top: -2px;
+            transform: scaleX(-1);
+        }
+
         .tab-btn {
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -125,6 +200,7 @@
         .action-button:active {
             transform: scale(0.96);
         }
+
 
         /* View transitions */
         .view-section {
