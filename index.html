@@ -260,7 +260,11 @@
             <!-- Left Column: Controls & Upload -->
             <div class="space-y-8 sticky top-10">
                 <div id="upload-zone"
-                    class="upload-box bg-white rounded-3xl p-10 flex flex-col items-center justify-center text-center cursor-pointer shadow-sm">
+                    class="upload-box bg-white rounded-3xl p-10 flex flex-col items-center justify-center text-center cursor-pointer shadow-sm"
+                    role="button"
+                    tabindex="0"
+                    title="Select PDF (Ctrl+O)"
+                    aria-keyshortcuts="Control+O">
                     <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
                         <span class="material-symbols-outlined text-4xl text-gray-400">cloud_upload</span>
                     </div>
@@ -334,12 +338,16 @@
 
                 <div id="action-buttons" class="space-y-4 hidden">
                     <button id="exportPdfBtn"
-                        class="action-button w-full bg-black text-white py-4 rounded-2xl flex items-center justify-center gap-3 font-extrabold uppercase text-sm tracking-widest shadow-xl">
+                        class="action-button w-full bg-black text-white py-4 rounded-2xl flex items-center justify-center gap-3 font-extrabold uppercase text-sm tracking-widest shadow-xl"
+                        title="Download PDF (Ctrl+S)"
+                        aria-keyshortcuts="Control+S">
                         <span class="material-symbols-outlined text-xl">file_download</span>
                         Download PDF
                     </button>
                     <button id="printBtn"
-                        class="action-button w-full bg-white border-4 border-black text-black py-4 rounded-2xl flex items-center justify-center gap-3 font-extrabold uppercase text-sm tracking-widest shadow-md">
+                        class="action-button w-full bg-white border-4 border-black text-black py-4 rounded-2xl flex items-center justify-center gap-3 font-extrabold uppercase text-sm tracking-widest shadow-md"
+                        title="Print Zine (Ctrl+P)"
+                        aria-keyshortcuts="Control+P">
                         <span class="material-symbols-outlined text-xl">print</span>
                         Print Directly
                     </button>

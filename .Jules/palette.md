@@ -5,3 +5,7 @@
 ## 2024-05-22 - Keyboard Shortcut Discoverability
 **Learning:** Keyboard shortcuts are powerful but invisible. Adding them to `title` attributes (e.g., "Print (Ctrl+P)") and using `aria-keyshortcuts` makes them discoverable and accessible to screen reader users without cluttering the UI.
 **Action:** When implementing keyboard shortcuts, always update the UI element's `title` and add `aria-keyshortcuts`.
+
+## 2024-05-23 - Custom Interactive Elements
+**Learning:** Custom interactive elements (like drop zones) require `role="button"`, `tabindex="0"`, and `keydown` listeners (Enter/Space) to be accessible; `click` listeners alone exclude keyboard users.
+**Action:** Always implement full keyboard support and ARIA roles for non-semantic interactive elements.

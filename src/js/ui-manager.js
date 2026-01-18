@@ -97,6 +97,12 @@ export class UIManager {
 
     // Upload interactions
     this.elements.uploadZone?.addEventListener('click', () => this.triggerFileUpload());
+    this.elements.uploadZone?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        this.triggerFileUpload();
+      }
+    });
     this.elements.uploadZone?.addEventListener('dragover', (e) => this.handleDragOver(e));
     this.elements.uploadZone?.addEventListener('dragleave', (e) => this.handleDragLeave(e));
     this.elements.uploadZone?.addEventListener('drop', (e) => this.handleFileDrop(e));
@@ -435,9 +441,22 @@ export class UIManager {
 
   handleKeyboard(e) {
     // Global keyboard shortcuts
-    if (e.key === 'p' && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault();
-      this.emitter.emit('print');
+    const isCmd = e.metaKey || e.ctrlKey;
+    if (!isCmd) { return; }
+
+    switch (e.key.toLowerCase()) {
+      case 'p':
+        e.preventDefault();
+        this.emitter.emit('print');
+        break;
+      case 's':
+        e.preventDefault();
+        this.emitter.emit('export');
+        break;
+      case 'o':
+        e.preventDefault();
+        this.triggerFileUpload();
+        break;
     }
   }
 
