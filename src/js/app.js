@@ -14,6 +14,7 @@ class PDFZineMaker {
     this.ui = new UIManager();
     this.referenceImageUrl = referenceImageUrl;
     this.allPageImages = new Array(16).fill(null);
+    this._blankPageUrl = null;
     this.init();
   }
 
@@ -110,6 +111,15 @@ class PDFZineMaker {
     try {
       this.ui.showProgress(true, 'Reading PDF...', '0%');
 
+      // Cleanup existing images from previous run
+      if (this.allPageImages) {
+        this.allPageImages.forEach(url => {
+          if (url && url !== this._blankPageUrl) {
+            this.pdfProcessor.revokeBlobUrl(url);
+          }
+        });
+      }
+
       const result = await this.pdfProcessor.loadPDF(file, (progress) => {
         this.ui.updateProgress(progress);
       });
@@ -174,7 +184,11 @@ class PDFZineMaker {
     }
   }
 
-  async createBlankPage(pageNum) {
+  async getBlankPageUrl() {
+    if (this._blankPageUrl) {
+      return this._blankPageUrl;
+    }
+
     const canvas = document.createElement('canvas');
     canvas.width = 1000;
     canvas.height = 1400;
@@ -186,10 +200,15 @@ class PDFZineMaker {
     ctx.textAlign = 'center';
     ctx.fillText('BLANK', 500, 700);
 
-    const url = await this.pdfProcessor.canvasToBlob(canvas);
+    this._blankPageUrl = await this.pdfProcessor.canvasToBlob(canvas);
+    return this._blankPageUrl;
+  }
 
-    // Revoke old URL if it exists
-    if (this.allPageImages[pageNum - 1]) {
+  async createBlankPage(pageNum) {
+    const url = await this.getBlankPageUrl();
+
+    // Revoke old URL if it exists and it is NOT the shared blank page URL
+    if (this.allPageImages[pageNum - 1] && this.allPageImages[pageNum - 1] !== this._blankPageUrl) {
       this.pdfProcessor.revokeBlobUrl(this.allPageImages[pageNum - 1]);
     }
 
