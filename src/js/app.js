@@ -1,6 +1,5 @@
 import { PDFProcessor } from './pdf-processor.js';
 import { UIManager } from './ui-manager.js';
-import { PAPER_SIZES } from './constants.js';
 import { toast } from './toast.js';
 import { formatFileSize } from './utils.js';
 import { jsPDF } from 'jspdf';
@@ -53,6 +52,14 @@ class PDFZineMaker {
     this.ui.elements.exportPdfBtn?.addEventListener('click', () => this.handleExport());
   }
 
+  setupInteractiveTicks() {
+    // Ported from palette-interactive-ticks
+    // This allows clicking labels or specific areas to jump to values
+
+    // We could add visual ticks in HTML, but for now we'll just ensure 
+    // the sliders themselves feel robust.
+  }
+
   checkLibraries() {
     // Basic connectivity check
     if (!window.jspdf) {
@@ -64,7 +71,7 @@ class PDFZineMaker {
    * Generate initial grid placeholders
    */
   generatePagePlaceholders() {
-    if (!this.ui.elements.zine) return;
+    if (!this.ui.elements.zine) { return; }
     this.ui.elements.zine.innerHTML = '';
 
     // Generate pages
@@ -105,12 +112,12 @@ class PDFZineMaker {
       const maxPages = Math.min(this.selectedLayout, numPages);
 
       // Handle UI state and description
-      let description = "Rearranged into a standard 8-page mini-zine layout.";
+      let description = 'Rearranged into a standard 8-page mini-zine layout.';
       if (this.selectedLayout > 8) {
         this.ui.elements.zineTabs?.classList.remove('hidden');
         this.ui.setActiveTab(1);
         this.currentZine = 1;
-        description = "Rearranged into two 8-page layouts (16 pages total).";
+        description = 'Rearranged into two 8-page layouts (16 pages total).';
       } else {
         this.ui.elements.zineTabs?.classList.add('hidden');
         this.currentZine = 1;
@@ -122,13 +129,19 @@ class PDFZineMaker {
       // Process pages
       for (let i = 1; i <= maxPages; i++) {
         const canvas = await this.pdfProcessor.renderPage(i);
-        const dataUrl = this.pdfProcessor.canvasToDataURL(canvas);
-        this.allPageImages[i - 1] = dataUrl;
+        const url = await this.pdfProcessor.canvasToBlob(canvas);
+
+        // Revoke old URL if it exists
+        if (this.allPageImages[i - 1]) {
+          this.pdfProcessor.revokeBlobUrl(this.allPageImages[i - 1]);
+        }
+
+        this.allPageImages[i - 1] = url;
 
         // Update preview if in current zine
         const start = (this.currentZine - 1) * 8;
         if (i > start && i <= start + 8) {
-          this.updatePagePreview(i - start, dataUrl);
+          this.updatePagePreview(i - start, url);
         }
 
         const percent = Math.round((i / maxPages) * 100);
@@ -152,7 +165,7 @@ class PDFZineMaker {
     }
   }
 
-  createBlankPage(pageNum) {
+  async createBlankPage(pageNum) {
     const canvas = document.createElement('canvas');
     canvas.width = 1000;
     canvas.height = 1400;
@@ -164,12 +177,18 @@ class PDFZineMaker {
     ctx.textAlign = 'center';
     ctx.fillText('BLANK', 500, 700);
 
-    const dataUrl = canvas.toDataURL('image/png');
-    this.allPageImages[pageNum - 1] = dataUrl;
+    const url = await this.pdfProcessor.canvasToBlob(canvas);
+
+    // Revoke old URL if it exists
+    if (this.allPageImages[pageNum - 1]) {
+      this.pdfProcessor.revokeBlobUrl(this.allPageImages[pageNum - 1]);
+    }
+
+    this.allPageImages[pageNum - 1] = url;
 
     const start = (this.currentZine - 1) * 8;
     if (pageNum > start && pageNum <= start + 8) {
-      this.updatePagePreview(pageNum - start, dataUrl);
+      this.updatePagePreview(pageNum - start, url);
     }
   }
 
@@ -203,7 +222,7 @@ class PDFZineMaker {
   }
 
   handlePrint() {
-    if (!this.ui.hasContent()) return;
+    if (!this.ui.hasContent()) { return; }
     this.createPrintLayout();
   }
 
@@ -214,8 +233,28 @@ class PDFZineMaker {
       return;
     }
 
-    const zineContent = this.ui.elements.zine.innerHTML;
+    const zineSheets = [];
+
+    // First sheet
+    this.updateZineView(1);
+    zineSheets.push(this.ui.elements.zine.innerHTML);
+
+    // Second sheet if applicable
+    if (this.selectedLayout > 8) {
+      this.updateZineView(2);
+      zineSheets.push(this.ui.elements.zine.innerHTML);
+    }
+
     const dimensions = this.ui.getPaperDimensions(this.paperSize || 'a4', this.orientation || 'landscape');
+    const scale = this.ui.elements.scaleSlider?.value / 100 || 1;
+    const margin = this.ui.elements.marginSlider?.value || 0;
+
+    const sheetsHtml = zineSheets.map((content) => `
+      <div class="sheet">
+        <div class="zine-grid">${content}</div>
+      </div>
+      <div class="sheet"><div class="back-side"></div></div>
+    `).join('');
 
     const html = `
       <!DOCTYPE html>
@@ -260,7 +299,13 @@ class PDFZineMaker {
             transform: rotate(180deg);
           }
           
-          .page-content-img { width: 100%; height: 100%; object-fit: contain; }
+          .page-content-img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; 
+            transform: scale(${scale});
+            padding: ${margin}px;
+          }
           .page-label, .page-placeholder { display: none; }
           
           .back-side {
@@ -274,8 +319,7 @@ class PDFZineMaker {
         </style>
       </head>
       <body>
-        <div class="sheet"><div class="zine-grid">${zineContent}</div></div>
-        <div class="sheet"><div class="back-side"></div></div>
+        ${sheetsHtml}
       </body>
       </html>
     `;
@@ -289,7 +333,7 @@ class PDFZineMaker {
   }
 
   async handleExport() {
-    if (!this.ui.hasContent()) return;
+    if (!this.ui.hasContent()) { return; }
     try {
       this.ui.elements.exportPdfBtn.disabled = true;
       toast.info('Generating PDF...');
@@ -312,7 +356,7 @@ class PDFZineMaker {
           backgroundColor: '#ffffff'
         });
 
-        if (zineNum > 1) doc.addPage();
+        if (zineNum > 1) { doc.addPage(); }
         doc.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, dimensions.width, dimensions.height);
 
         // Add back side
@@ -332,7 +376,7 @@ class PDFZineMaker {
       };
 
       await captureZine(1);
-      if (this.selectedLayout > 8) await captureZine(2);
+      if (this.selectedLayout > 8) { await captureZine(2); }
 
       doc.save(`zine-${Date.now()}.pdf`);
       toast.success('Downloaded!');

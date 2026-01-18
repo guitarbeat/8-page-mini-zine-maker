@@ -174,7 +174,31 @@ export class PDFProcessor {
   }
 
   /**
-   * Convert canvas to data URL
+   * Convert canvas to Blob URL for performance
+   * @param {HTMLCanvasElement} canvas - Canvas to convert
+   * @returns {Promise<string>} Blob URL
+   */
+  async canvasToBlob(canvas) {
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        resolve(url);
+      }, 'image/jpeg', 0.9);
+    });
+  }
+
+  /**
+   * Revoke a Blob URL to free memory
+   * @param {string} url - Blob URL to revoke
+   */
+  revokeBlobUrl(url) {
+    if (url && url.startsWith('blob:')) {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  /**
+   * Convert canvas to data URL (legacy/fallback)
    * @param {HTMLCanvasElement} canvas - Canvas to convert
    * @param {string} format - Image format ('image/png' or 'image/jpeg')
    * @param {number} quality - Image quality (0-1, only for JPEG)
