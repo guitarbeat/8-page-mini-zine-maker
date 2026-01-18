@@ -61,6 +61,14 @@ export const ZINE_TEMPLATES = {
         cutLines: {
             leftEdge: { rows: [0, 1, 2] },   // Cut through rows 1-3, leave row 4 intact
             rightEdge: { rows: [0, 1, 2] }  // Same on right side
-        }
+        },
+        description: '1 sheet, 4×4 grid. Cut along edges then fold accordion-style.'
+    },
+    'dual-16': {
+        label: '16-Page Dual Sheets',
+        pages: 16,
+        sheets: 2, // Uses 2 separate 8-page mini-zine sheets
+        grid: { rows: 2, cols: 4 },
+        description: '2 sheets, each folded like an 8-page zine.'
     }
 };

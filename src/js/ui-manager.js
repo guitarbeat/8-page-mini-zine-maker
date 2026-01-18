@@ -66,7 +66,13 @@ export class UIManager {
       scaleSlider: $('#scale-slider'),
       scaleValue: $('#scale-value'),
       marginSlider: $('#margin-slider'),
-      marginValue: $('#margin-value')
+      marginValue: $('#margin-value'),
+
+      // Layout Toggle
+      layoutToggleSection: $('#layout-toggle-section'),
+      layoutAccordionBtn: $('#layout-accordion'),
+      layoutDualBtn: $('#layout-dual'),
+      layoutDescription: $('#layout-description')
     };
   }
 
@@ -89,9 +95,6 @@ export class UIManager {
     this.elements.paperSizeSelect?.addEventListener('change', (e) => this.updatePaperSize(e.target.value));
     this.elements.orientationSelect?.addEventListener('change', (e) => this.updateOrientation(e.target.value));
 
-    // Orientation
-    this.elements.orientationSelect?.addEventListener('change', (e) => this.updateOrientation(e.target.value));
-
     // Upload interactions
     this.elements.uploadZone?.addEventListener('click', () => this.triggerFileUpload());
     this.elements.uploadZone?.addEventListener('dragover', (e) => this.handleDragOver(e));
@@ -107,9 +110,57 @@ export class UIManager {
     this.elements.scaleSlider?.addEventListener('input', (e) => this.updateScale(e.target.value));
     this.elements.marginSlider?.addEventListener('input', (e) => this.updateMargins(e.target.value));
 
+    // Layout toggle buttons
+    this.elements.layoutAccordionBtn?.addEventListener('click', () => this.selectLayout('accordion-16'));
+    this.elements.layoutDualBtn?.addEventListener('click', () => this.selectLayout('dual-16'));
+
     // Keyboard
     document.addEventListener('keydown', (e) => this.handleKeyboard(e));
   }
+
+  /**
+   * Show layout toggle section and set available layouts
+   */
+  showLayoutToggle(numPages) {
+    // Only show toggle if multiple layouts are available (9-16 pages)
+    if (numPages > 8 && numPages <= 16) {
+      this.elements.layoutToggleSection?.classList.remove('hidden');
+    } else {
+      this.elements.layoutToggleSection?.classList.add('hidden');
+    }
+  }
+
+  /**
+   * Select a layout and update UI
+   */
+  selectLayout(templateType) {
+    // Update button states
+    this.elements.layoutAccordionBtn?.classList.toggle('selected', templateType === 'accordion-16');
+    this.elements.layoutDualBtn?.classList.toggle('selected', templateType === 'dual-16');
+
+    // Update description
+    const template = ZINE_TEMPLATES[templateType];
+    if (template && this.elements.layoutDescription) {
+      this.elements.layoutDescription.textContent = template.description || '';
+    }
+
+    // Emit event for app.js to handle re-processing
+    this.emitter.emit('layoutChanged', templateType);
+  }
+
+  /**
+   * Programmatically set the selected layout (without emitting event)
+   */
+  setSelectedLayout(templateType) {
+    this.elements.layoutAccordionBtn?.classList.toggle('selected', templateType === 'accordion-16');
+    this.elements.layoutDualBtn?.classList.toggle('selected', templateType === 'dual-16');
+
+    const template = ZINE_TEMPLATES[templateType];
+    if (template && this.elements.layoutDescription) {
+      this.elements.layoutDescription.textContent = template.description || '';
+    }
+  }
+
 
   /**
    * Set the UI to "ready" state (enable preview area and action buttons)
@@ -501,7 +552,8 @@ export class UIManager {
   }
 
   hasContent() {
-    return this.elements.zineContainer && this.elements.zineContainer.children.length > 0;
+    return this.elements.zineSheetsContainer &&
+      this.elements.zineSheetsContainer.querySelector('.page-content-img:not(.hidden)') !== null;
   }
 
   on(event, handler) {

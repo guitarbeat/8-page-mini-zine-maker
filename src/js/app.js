@@ -46,10 +46,42 @@ class PDFZineMaker {
     this.ui.on('paperSizeChanged', (data) => this.updatePaperSettings(data));
     this.ui.on('orientationChanged', (data) => this.updatePaperSettings(data));
     this.ui.on('pagesSwapped', (data) => this.handlePagesSwapped(data));
+    this.ui.on('layoutChanged', (templateType) => this.handleLayoutChanged(templateType));
 
     // Direct element listeners if needed (already handled by UIManager)
     this.ui.elements.printBtn?.addEventListener('click', () => this.handlePrint());
     this.ui.elements.exportPdfBtn?.addEventListener('click', () => this.handleExport());
+  }
+
+  /**
+   * Handle layout change from toggle buttons
+   */
+  handleLayoutChanged(templateType) {
+    if (!this.selectedFile) { return; }
+
+    this.currentTemplate = templateType;
+    const numPages = Math.min(16, this.allPageImages.filter(img => img !== null).length) || 16;
+
+    // Update description based on template
+    let description = 'Rearranged into a standard 8-page mini-zine layout.';
+    if (templateType === 'accordion-16') {
+      description = 'Rearranged into a 16-page accordion zine layout. Cut along the red lines after printing.';
+    } else if (templateType === 'dual-16') {
+      description = 'Rearranged into two 8-page zine sheets.';
+    }
+
+    // Re-generate layout with new template
+    this.ui.generateLayout(numPages, templateType);
+    this.ui.setReady(true, description);
+
+    // Re-apply all page images to the new layout
+    for (let i = 0; i < this.allPageImages.length; i++) {
+      if (this.allPageImages[i]) {
+        this.ui.updatePagePreview(i, this.allPageImages[i]);
+      }
+    }
+
+    toast.info(`Switched to ${templateType === 'accordion-16' ? 'Accordion' : '2 Sheets'} layout`);
   }
 
   setupInteractiveTicks() {
@@ -98,9 +130,15 @@ class PDFZineMaker {
       this.currentTemplate = templateType;
       this.ui.generateLayout(numPages, templateType);
 
+      // Show layout toggle for PDFs with 9-16 pages
+      this.ui.showLayoutToggle(numPages);
+      if (numPages > 8) {
+        this.ui.setSelectedLayout(templateType);
+      }
 
       this.ui.setReady(true, description);
       this.allPageImages = new Array(16).fill(null);
+
 
       // Process pages
       for (let i = 1; i <= maxPages; i++) {
@@ -408,7 +446,11 @@ class PDFZineMaker {
       };
 
       await captureZine(1);
-      if (this.selectedLayout > 8) { await captureZine(2); }
+      // Only capture second sheet for dual-16 template (not accordion-16 which is single sheet)
+      if (this.currentTemplate !== 'accordion-16' && this.selectedLayout > 8) {
+        await captureZine(2);
+      }
+
 
       doc.save(`zine-${Date.now()}.pdf`);
       toast.success('Downloaded!');
