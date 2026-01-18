@@ -2,6 +2,7 @@
 
 import * as pdfjsLib from 'pdfjs-dist';
 import { formatFileSize } from './utils.js';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
 export class PDFProcessor {
   constructor() {
@@ -13,7 +14,7 @@ export class PDFProcessor {
    * Initialize PDF.js worker
    */
   async initialize() {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
   }
 
   /**

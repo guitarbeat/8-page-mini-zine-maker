@@ -1,191 +1,264 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="light" lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Convert PDFs into printable 8-page zine layouts with ease">
-    <meta name="theme-color" content="#2563eb">
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta name="description" content="Convert PDFs into printable 8-page or 16-page zine layouts with ease" />
+    <title>Zine-ify PDF Upload</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <style type="text/tailwindcss">
+        :root {
+            --bg-neutral: #F4F4F2;
+            --accent-dark: #1A1A1A;
+            --primary-vibrant: #2D5BFF;
+            --border-color: #D1D1D1;
+            --page-border: #1A1A1A;
+            --paper-bg: #FFFFFF;
+        }
+        body {
+            background-color: var(--bg-neutral);
+            font-family: 'Inter', sans-serif;
+            color: var(--accent-dark);
+        }
+        .upload-box {
+            border: 2px dashed var(--border-color);
+            transition: all 0.2s ease;
+        }
+        .upload-box:active, .upload-box.dragover {
+            border-color: var(--accent-dark);
+            background-color: rgba(0,0,0,0.02);
+            transform: scale(0.99);
+        }
+        .toggle-container {
+            background: #FFFFFF;
+            border: 1.5px solid var(--accent-dark);
+        }
+        #layout-16:checked ~ .toggle-container .label-16 {
+            background-color: var(--accent-dark);
+            color: white;
+        }
+        #layout-8:checked ~ .toggle-container .label-8 {
+            background-color: var(--accent-dark);
+            color: white;
+        }
 
-    <!-- PWA Meta Tags -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Octovo Zine Maker">
-    <meta name="mobile-web-app-capable" content="yes">
+        /* Preview specific styles */
+        .print-sheet {
+            background-color: var(--paper-bg);
+            aspect-ratio: 1 / 1.414;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #D1D5DB;
+        }
+        .zine-grid {
+            display: grid;
+            grid-template-areas:
+                "page5 page4 page3 page2"
+                "page6 page7 page8 page1";
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            height: 100%;
+            width: 100%;
+        }
+        .page-cell {
+            border: 0.5px dashed #CCCCCC;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .page-content-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .page-label {
+            position: absolute;
+            background: var(--accent-dark);
+            color: white;
+            font-weight: 800;
+            font-size: 10px;
+            padding: 2px 5px;
+            border-radius: 2px;
+            z-index: 20;
+            top: 4px;
+            left: 4px;
+        }
+        .page-cell[data-page="1"] { grid-area: page1; }
+        .page-cell[data-page="2"] { grid-area: page2; }
+        .page-cell[data-page="3"] { grid-area: page3; }
+        .page-cell[data-page="4"] { grid-area: page4; }
+        .page-cell[data-page="5"] { grid-area: page5; }
+        .page-cell[data-page="6"] { grid-area: page6; }
+        .page-cell[data-page="7"] { grid-area: page7; }
+        .page-cell[data-page="8"] { grid-area: page8; }
 
-    <!-- Favicon and Icons -->
-    <link rel="icon" type="image/svg+xml"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z'/><polyline points='14 2 14 8 20 8'/></svg>">
-    <link rel="apple-touch-icon"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z'/><polyline points='14 2 14 8 20 8'/></svg>">
+        .page-cell[data-page="2"], .page-cell[data-page="3"], 
+        .page-cell[data-page="4"], .page-cell[data-page="5"] {
+            transform: rotate(180deg);
+        }
+        .tab-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .action-button {
+            transition: transform 0.1s ease;
+        }
+        .action-button:active {
+            transform: scale(0.96);
+        }
 
-    <title>Octovo Zine Maker</title>
-    <link rel="stylesheet" href="src/css/styles.css">
+        /* View transitions */
+        .view-section {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .view-section.hidden {
+            display: none;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        /* Progress Bar */
+        .progress-bar-container {
+            width: 100%;
+            height: 4px;
+            background: #E5E7EB;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        #progress-fill {
+            height: 100%;
+            background: var(--primary-vibrant);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "neutral-bg": "#F4F4F2",
+                        "primary-vibrant": "#2D5BFF",
+                    }
+                },
+            },
+        }
+    </script>
 </head>
 
-<body>
-    <!-- Night Mode Toggle Button -->
-    <button id="themeToggle" class="theme-toggle" title="Toggle night mode (Space)" aria-keyshortcuts="Space">
-        <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        </svg>
-    </button>
-
-    <!-- Toast Container -->
-    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
-
-    <div class="container" id="main-content">
-        <!-- Compact Header -->
-        <header class="no-print compact-header fade-in-up" role="banner">
-            <div class="header-content">
-                <h1 class="text-primary">Octovo Zine Maker</h1>
-                <p class="text-secondary">Convert PDF files into printable 8-page zines</p>
-            </div>
-
-            <!-- Action Buttons (shown when content is loaded) -->
-            <div id="action-buttons" class="action-buttons hidden" role="toolbar" aria-label="Document actions">
-                <button id="printBtn" class="btn btn-success btn-compact" title="Print Zine (Ctrl+P)"
-                    aria-keyshortcuts="Control+P" aria-describedby="print-desc">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
-                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-                        <rect x="6" y="14" width="12" height="8"></rect>
-                    </svg>
-                    <span id="print-desc" class="sr-only">Print the zine layout</span>
-                    Print
-                </button>
-                <button id="exportPdfBtn" class="btn btn-primary btn-compact" title="Export PDF (Ctrl+S)"
-                    aria-keyshortcuts="Control+S" aria-describedby="export-desc">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    <span id="export-desc" class="sr-only">Export zine as PDF file</span>
-                    Export
-                </button>
-                <button id="settingsBtn" class="btn btn-secondary btn-compact" title="Settings"
-                    aria-label="Open settings panel" aria-expanded="false" aria-controls="settings-panel">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path
-                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                        </path>
-                    </svg>
-                </button>
-            </div>
+<body class="antialiased min-h-screen py-10 px-6">
+    <div class="max-w-4xl mx-auto space-y-12">
+        <header class="text-center">
+            <h1 class="text-4xl font-extrabold tracking-tighter uppercase mb-2">Zine-ify</h1>
+            <p class="text-gray-500 font-medium">Automatic PDF to Printable Mini-Zine</p>
         </header>
 
-        <!-- Upload Section -->
-        <section class="no-print section">
-            <div class="card container" style="max-width: 48rem;">
-                <div id="upload-zone" class="upload-zone" tabindex="0" role="button" aria-label="Upload PDF file"
-                    aria-keyshortcuts="Control+O" title="Upload PDF file (Ctrl+O)">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="upload-icon">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="17 8 12 3 7 8"></polyline>
-                        <line x1="12" y1="3" x2="12" y2="15"></line>
-                    </svg>
-                    <h3 class="upload-title">Drop PDF here or <span class="upload-link">browse files</span></h3>
-                    <p class="upload-hint">Supports 8 or 16 page layouts</p>
-                    <input type="file" id="pdf-upload" class="hidden" accept="application/pdf" multiple="false">
-                </div>
-                <p id="upload-status" class="upload-status text-center text-muted" aria-live="polite"></p>
-            </div>
-        </section>
-
-        <!-- Progress Indicator -->
-        <section id="progress-container" class="no-print section progress-container hidden">
-            <div class="card container" style="max-width: 48rem;">
-                <h3 class="text-primary text-center"
-                    style="margin-bottom: var(--space-md); font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold);">
-                    Processing PDF</h3>
-                <div>
-                    <div class="progress-bar" role="progressbar" aria-label="PDF Conversion Progress" aria-valuemin="0"
-                        aria-valuemax="100" aria-valuenow="0">
-                        <div id="progress-fill" class="progress-fill"></div>
+        <main class="grid grid-cols-1 md:grid-cols-[350px_1fr] gap-12 items-start">
+            <!-- Left Column: Controls & Upload -->
+            <div class="space-y-8 sticky top-10">
+                <div id="upload-zone"
+                    class="upload-box bg-white rounded-3xl p-10 flex flex-col items-center justify-center text-center cursor-pointer shadow-sm">
+                    <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                        <span class="material-symbols-outlined text-4xl text-gray-400">cloud_upload</span>
                     </div>
-                    <div id="progress-text" class="progress-text">Starting...</div>
+                    <h2 class="text-lg font-bold mb-1">Select PDF</h2>
+                    <p id="upload-status" class="text-[11px] text-gray-400 uppercase font-bold tracking-wider">Supports
+                        up to 16 pages</p>
+                    <input type="file" id="pdf-upload" class="hidden" accept="application/pdf">
                 </div>
-            </div>
-        </section>
 
-        <!-- Scaling Controls -->
-        <section class="no-print section">
-            <div class="card container fade-in-up" style="max-width: 48rem;">
-                <div class="card-header">
-                    <h3 class="card-title">Page Scale</h3>
-                    <p class="card-description">Adjust the size of your zine pages for optimal printing</p>
-                </div>
-                <div>
-                    <div class="slider-label">
-                        <label for="scale-slider">Scale</label>
-                        <span id="scale-value" class="slider-value">100%</span>
+                <div id="settings-group" class="bg-white rounded-3xl p-8 shadow-sm space-y-6">
+                    <h3 class="text-sm font-extrabold uppercase tracking-widest border-b pb-4">Settings</h3>
+
+                    <div>
+                        <label class="text-[10px] font-bold uppercase text-gray-400 mb-2 block tracking-widest">Paper
+                            Size</label>
+                        <select id="paper-size-select"
+                            class="w-full bg-gray-50 border-none rounded-xl font-bold text-sm p-4 focus:ring-2 focus:ring-black">
+                            <!-- Populated by JS -->
+                        </select>
                     </div>
-                    <input type="range" id="scale-slider" min="50" max="200" value="100" class="slider">
-                    <div class="slider-ticks">
-                        <span class="tick-label" role="button" tabindex="0" aria-label="Set scale to 50%"
-                            data-value="50">50%</span>
-                        <span class="tick-label" role="button" tabindex="0" aria-label="Set scale to 100%"
-                            data-value="100">100%</span>
-                        <span class="tick-label" role="button" tabindex="0" aria-label="Set scale to 200%"
-                            data-value="200">200%</span>
+
+                    <div>
+                        <label
+                            class="text-[10px] font-bold uppercase text-gray-400 mb-2 block tracking-widest">Orientation</label>
+                        <select id="orientation-select"
+                            class="w-full bg-gray-50 border-none rounded-xl font-bold text-sm p-4 focus:ring-2 focus:ring-black">
+                            <option value="landscape">Landscape</option>
+                            <option value="portrait">Portrait</option>
+                        </select>
                     </div>
                 </div>
 
-                <!-- Settings Panel -->
-                <div id="settings-panel" class="settings-panel hidden" role="dialog" aria-modal="true"
-                    aria-labelledby="settings-title">
-                    <div class="settings-overlay" aria-hidden="true"></div>
-                    <div class="settings-content">
-                        <div class="settings-header">
-                            <h3 id="settings-title" class="settings-title">Print Settings</h3>
-                            <button class="settings-close" aria-label="Close settings" title="Close (Esc)">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round">
-                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="settings-body">
-                            <div class="setting-group">
-                                <label for="paper-size-select" class="setting-label">Paper Size</label>
-                                <select id="paper-size-select" class="setting-select">
-                                    <option value="a4">A4 (210 × 297 mm)</option>
-                                    <option value="a3">A3 (297 × 420 mm)</option>
-                                    <option value="letter">Letter (8.5 × 11 in)</option>
-                                    <option value="legal">Legal (8.5 × 14 in)</option>
-                                    <option value="a5">A5 (148 × 210 mm)</option>
-                                </select>
-                            </div>
-                            <div class="setting-group">
-                                <label for="orientation-select" class="setting-label">Orientation</label>
-                                <select id="orientation-select" class="setting-select">
-                                    <option value="landscape">Landscape</option>
-                                    <option value="portrait">Portrait</option>
-                                </select>
-                            </div>
-                            <div class="setting-info">
-                                <p><strong>Note:</strong> Changes will apply to both printing and PDF export.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Zine Container -->
-                <div id="zine-container" class="zine scale-in" role="tabpanel">
-                    <!-- Pages 1 to 8 will be generated by JavaScript -->
+                <div id="action-buttons" class="space-y-4 hidden">
+                    <button id="exportPdfBtn"
+                        class="action-button w-full bg-black text-white py-4 rounded-2xl flex items-center justify-center gap-3 font-extrabold uppercase text-sm tracking-widest shadow-xl">
+                        <span class="material-symbols-outlined text-xl">file_download</span>
+                        Download PDF
+                    </button>
+                    <button id="printBtn"
+                        class="action-button w-full bg-white border-4 border-black text-black py-4 rounded-2xl flex items-center justify-center gap-3 font-extrabold uppercase text-sm tracking-widest shadow-md">
+                        <span class="material-symbols-outlined text-xl">print</span>
+                        Print Directly
+                    </button>
                 </div>
             </div>
-        </section>
+
+            <!-- Right Column: Preview Area -->
+            <div id="preview-area"
+                class="opacity-30 pointer-events-none transition-opacity duration-500 min-h-[600px] flex flex-col items-center">
+                <div class="w-full text-center md:text-left mb-8">
+                    <h2 class="text-2xl font-extrabold mb-2 uppercase">Zine Preview</h2>
+                    <p class="text-gray-500 text-sm leading-relaxed max-w-md" id="preview-description">
+                        Upload a PDF to see your zine layout here.
+                    </p>
+                </div>
+
+                <!-- Zine Tabs -->
+                <div id="zine-tabs" class="w-full flex p-1 bg-gray-200/50 rounded-2xl mb-8 hidden">
+                    <button id="zine-tab-1"
+                        class="tab-btn flex-1 py-3 text-[10px] font-extrabold uppercase tracking-widest rounded-xl bg-white shadow-sm">Sheet
+                        1</button>
+                    <button id="zine-tab-2"
+                        class="tab-btn flex-1 py-3 text-[10px] font-extrabold uppercase tracking-widest rounded-xl text-gray-400">Sheet
+                        2</button>
+                </div>
+
+                <div class="print-sheet w-full p-0 relative mb-10 overflow-hidden rounded-sm">
+                    <div id="zine-container" class="zine-grid">
+                        <!-- Pages 1 to 8 will be generated by JavaScript -->
+                    </div>
+
+                    <!-- Guidelines -->
+                    <div class="absolute top-1/2 left-0 w-full border-t border-blue-400/20 pointer-events-none"></div>
+                    <div class="absolute top-0 left-1/4 h-full border-l border-blue-400/20 pointer-events-none"></div>
+                    <div class="absolute top-0 left-1/2 h-full border-l border-blue-400/20 pointer-events-none"></div>
+                    <div class="absolute top-0 left-3/4 h-full border-l border-blue-400/20 pointer-events-none"></div>
+                </div>
+            </div>
+        </main>
     </div>
+
+    <!-- Progress View Overlay -->
+    <div id="progress-container"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex flex-col items-center justify-center p-6 hidden">
+        <div class="bg-white p-10 rounded-3xl w-full max-w-xs text-center shadow-2xl">
+            <h3 id="progress-text" class="text-lg font-extrabold mb-4 uppercase tracking-tighter">Processing...</h3>
+            <div class="progress-bar-container mb-2">
+                <div id="progress-fill"></div>
+            </div>
+            <p id="progress-subtext" class="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">
+                Converting pages</p>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[300] space-y-2"></div>
 
     <!-- Load the application as ES module -->
     <script type="module" src="/src/js/app.js"></script>
