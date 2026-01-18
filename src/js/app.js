@@ -25,7 +25,7 @@ class PDFZineMaker {
       await this.pdfProcessor.initialize();
       this.setupEventListeners();
       this.checkLibraries();
-      this.generatePagePlaceholders();
+      this.ui.generateLayout(8); // Default to 8 pages
       this.ui.setStatus('Upload a PDF file to get started', 'info');
     } catch (error) {
       console.error('Initialization error:', error);
@@ -45,7 +45,7 @@ class PDFZineMaker {
     this.ui.on('export', () => this.handleExport());
     this.ui.on('paperSizeChanged', (data) => this.updatePaperSettings(data));
     this.ui.on('orientationChanged', (data) => this.updatePaperSettings(data));
-    this.ui.on('zineTabChanged', (zineNum) => this.updateZineView(zineNum));
+    this.ui.on('pagesSwapped', (data) => this.handlePagesSwapped(data));
 
     // Direct element listeners if needed (already handled by UIManager)
     this.ui.elements.printBtn?.addEventListener('click', () => this.handlePrint());
@@ -64,31 +64,6 @@ class PDFZineMaker {
     // Basic connectivity check
     if (!window.jspdf) {
       console.warn('PDF library not yet loaded...');
-    }
-  }
-
-  /**
-   * Generate initial grid placeholders
-   */
-  generatePagePlaceholders() {
-    if (!this.ui.elements.zine) { return; }
-    this.ui.elements.zine.innerHTML = '';
-
-    // Generate pages
-    for (let i = 1; i <= 8; i++) {
-      const cell = document.createElement('div');
-      cell.className = 'page-cell h-full w-full bg-white relative flex items-center justify-center overflow-hidden';
-      cell.setAttribute('data-page', i);
-
-      const labelText = i === 1 ? 'Cover' : (i === 8 ? 'Back' : `Page ${i}`);
-
-      cell.innerHTML = `
-        <span class="page-label absolute top-2 left-2 px-2 py-1 bg-black text-white text-[10px] font-black rounded uppercase z-10">${labelText}</span>
-        <div class="page-placeholder text-gray-200 text-xs font-black uppercase tracking-widest">Empty</div>
-        <img alt="Page ${i}" class="page-content-img w-full h-full object-contain hidden" />
-      `;
-
-      this.ui.elements.zine.appendChild(cell);
     }
   }
 
@@ -112,16 +87,11 @@ class PDFZineMaker {
       const maxPages = Math.min(this.selectedLayout, numPages);
 
       // Handle UI state and description
-      let description = 'Rearranged into a standard 8-page mini-zine layout.';
-      if (this.selectedLayout > 8) {
-        this.ui.elements.zineTabs?.classList.remove('hidden');
-        this.ui.setActiveTab(1);
-        this.currentZine = 1;
-        description = 'Rearranged into two 8-page layouts (16 pages total).';
-      } else {
-        this.ui.elements.zineTabs?.classList.add('hidden');
-        this.currentZine = 1;
-      }
+      const description = this.selectedLayout > 8
+        ? 'Rearranged into two 8-page layouts (16 pages total).'
+        : 'Rearranged into a standard 8-page mini-zine layout.';
+
+      this.ui.generateLayout(this.selectedLayout);
 
       this.ui.setReady(true, description);
       this.allPageImages = new Array(16).fill(null);
@@ -137,12 +107,7 @@ class PDFZineMaker {
         }
 
         this.allPageImages[i - 1] = url;
-
-        // Update preview if in current zine
-        const start = (this.currentZine - 1) * 8;
-        if (i > start && i <= start + 8) {
-          this.updatePagePreview(i - start, url);
-        }
+        this.ui.updatePagePreview(i - 1, url);
 
         const percent = Math.round((i / maxPages) * 100);
         this.ui.showProgress(true, `Processing Page ${i} of ${maxPages}`, `${percent}%`);
@@ -151,7 +116,7 @@ class PDFZineMaker {
 
       // Fill blanks - using the same blank page logic
       for (let i = maxPages + 1; i <= (this.selectedLayout); i++) {
-        this.createBlankPage(i);
+        await this.createBlankPage(i);
       }
 
       this.ui.showProgress(false);
@@ -185,34 +150,29 @@ class PDFZineMaker {
     }
 
     this.allPageImages[pageNum - 1] = url;
-
-    const start = (this.currentZine - 1) * 8;
-    if (pageNum > start && pageNum <= start + 8) {
-      this.updatePagePreview(pageNum - start, url);
-    }
+    this.ui.updatePagePreview(pageNum - 1, url);
   }
 
-  updatePagePreview(displayNum, dataUrl) {
-    const cell = this.ui.elements.zine.querySelector(`[data-page="${displayNum}"]`);
-    if (cell) {
-      const img = cell.querySelector('.page-content-img');
-      const placeholder = cell.querySelector('.page-placeholder');
-      if (img && placeholder) {
-        img.src = dataUrl;
-        img.classList.remove('hidden');
-        placeholder.classList.add('hidden');
-      }
-    }
+  handlePagesSwapped({ fromIndex, toIndex }) {
+    // Swap images in array
+    const temp = this.allPageImages[fromIndex];
+    this.allPageImages[fromIndex] = this.allPageImages[toIndex];
+    this.allPageImages[toIndex] = temp;
+
+    // Update previews
+    this.ui.updatePagePreview(fromIndex, this.allPageImages[fromIndex]);
+    this.ui.updatePagePreview(toIndex, this.allPageImages[toIndex]);
+
+    toast.info('Pages swapped');
   }
 
   updateZineView(zineNum) {
-    this.currentZine = zineNum;
-    const start = (zineNum - 1) * 8;
-    for (let i = 1; i <= 8; i++) {
-      const dataUrl = this.allPageImages[start + i - 1];
-      if (dataUrl) {
-        this.updatePagePreview(i, dataUrl);
-      }
+    // Update the UI to show the correct 8 pages for the selected zine (1 or 2)
+    const startPageIndex = (zineNum - 1) * 8;
+    for (let i = 0; i < 8; i++) {
+      const globalPageIndex = startPageIndex + i;
+      const imageUrl = this.allPageImages[globalPageIndex];
+      this.ui.updatePagePreview(i, imageUrl); // Update the 8 visible cells
     }
   }
 
@@ -235,15 +195,10 @@ class PDFZineMaker {
 
     const zineSheets = [];
 
-    // First sheet
-    this.updateZineView(1);
-    zineSheets.push(this.ui.elements.zine.innerHTML);
-
-    // Second sheet if applicable
-    if (this.selectedLayout > 8) {
-      this.updateZineView(2);
-      zineSheets.push(this.ui.elements.zine.innerHTML);
-    }
+    // Get HTML for all sheets
+    document.querySelectorAll('.zine-grid').forEach(grid => {
+      zineSheets.push(grid.innerHTML);
+    });
 
     const dimensions = this.ui.getPaperDimensions(this.paperSize || 'a4', this.orientation || 'landscape');
     const scale = this.ui.elements.scaleSlider?.value / 100 || 1;
@@ -346,17 +301,19 @@ class PDFZineMaker {
 
       const dimensions = this.ui.getPaperDimensions(this.paperSize || 'a4', this.orientation || 'landscape');
 
-      const captureZine = async (zineNum) => {
-        this.updateZineView(zineNum);
-        await new Promise(r => setTimeout(r, 300));
+      const captureZine = async (sheetNum) => {
+        const grid = document.querySelector(`#zine-grid-sheet-${sheetNum}`);
+        if (!grid) { return; }
 
-        const canvas = await html2canvas(this.ui.elements.zine, {
+        await new Promise(r => setTimeout(r, 100));
+
+        const canvas = await html2canvas(grid, {
           scale: 3,
           useCORS: true,
           backgroundColor: '#ffffff'
         });
 
-        if (zineNum > 1) { doc.addPage(); }
+        if (sheetNum > 1) { doc.addPage(); }
         doc.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, dimensions.width, dimensions.height);
 
         // Add back side

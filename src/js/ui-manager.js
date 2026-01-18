@@ -36,8 +36,7 @@ export class UIManager {
       previewArea: $('#preview-area'),
       actionButtons: $('#action-buttons'),
       previewDescription: $('#preview-description'),
-      zineContainer: $('#zine-container'),
-      zine: $('#zine-container'), // Compatibility
+      zineSheetsContainer: $('#zine-sheets-container'),
 
       // Interactions
       printBtn: $('#printBtn'),
@@ -90,16 +89,8 @@ export class UIManager {
     this.elements.paperSizeSelect?.addEventListener('change', (e) => this.updatePaperSize(e.target.value));
     this.elements.orientationSelect?.addEventListener('change', (e) => this.updateOrientation(e.target.value));
 
-    // Zine tabs
-    this.elements.zineTab1?.addEventListener('click', () => {
-      this.setActiveTab(1);
-      this.emitter.emit('zineTabChanged', 1);
-    });
-
-    this.elements.zineTab2?.addEventListener('click', () => {
-      this.setActiveTab(2);
-      this.emitter.emit('zineTabChanged', 2);
-    });
+    // Orientation
+    this.elements.orientationSelect?.addEventListener('change', (e) => this.updateOrientation(e.target.value));
 
     // Upload interactions
     this.elements.uploadZone?.addEventListener('click', () => this.triggerFileUpload());
@@ -157,23 +148,108 @@ export class UIManager {
     }
   }
 
-  setActiveTab(tabNum) {
-    if (this.elements.zineTab1 && this.elements.zineTab2) {
-      const activeClasses = 'bg-white shadow-sm';
-      const inactiveClasses = 'text-gray-400';
+  /**
+   * Generate sheets and page placeholders
+   */
+  generateLayout(numPages = 8) {
+    if (!this.elements.zineSheetsContainer) { return; }
+    this.elements.zineSheetsContainer.innerHTML = '';
 
-      if (tabNum === 1) {
-        this.elements.zineTab1.classList.add(...activeClasses.split(' '));
-        this.elements.zineTab1.classList.remove(...inactiveClasses.split(' '));
-        this.elements.zineTab2.classList.remove(...activeClasses.split(' '));
-        this.elements.zineTab2.classList.add(...inactiveClasses.split(' '));
-      } else {
-        this.elements.zineTab2.classList.add(...activeClasses.split(' '));
-        this.elements.zineTab2.classList.remove(...inactiveClasses.split(' '));
-        this.elements.zineTab1.classList.remove(...activeClasses.split(' '));
-        this.elements.zineTab1.classList.add(...inactiveClasses.split(' '));
+    const numSheets = numPages > 8 ? 2 : 1;
+
+    for (let s = 1; s <= numSheets; s++) {
+      const sheetWrapper = document.createElement('div');
+      sheetWrapper.className = 'print-sheet w-full p-0 relative overflow-hidden rounded-sm';
+      sheetWrapper.setAttribute('data-sheet', s);
+
+      const grid = document.createElement('div');
+      grid.className = 'zine-grid';
+      grid.id = `zine-grid-sheet-${s}`;
+
+      for (let i = 1; i <= 8; i++) {
+        const pageIdx = (s - 1) * 8 + i;
+        const cell = document.createElement('div');
+        cell.className = 'page-cell h-full w-full bg-white relative flex items-center justify-center overflow-hidden';
+        cell.setAttribute('data-page-index', pageIdx - 1);
+        cell.setAttribute('draggable', 'true');
+
+        const labelText = i === 1 ? 'Cover' : (i === 8 ? 'Back' : `Page ${i}`);
+        const sheetLabel = numSheets > 1 ? ` <span class="opacity-50 text-[8px] ml-1">(Sheet ${s})</span>` : '';
+
+        cell.innerHTML = `
+          <span class="page-label absolute top-2 left-2 px-2 py-1 bg-black text-white text-[10px] font-black rounded uppercase z-10">${labelText}${sheetLabel}</span>
+          <div class="page-placeholder text-gray-200 text-xs font-black uppercase tracking-widest">Empty</div>
+          <img alt="Page ${pageIdx}" class="page-content-img w-full h-full object-contain hidden" draggable="false" />
+        `;
+
+        this.setupDragAndDrop(cell);
+        grid.appendChild(cell);
+      }
+
+      // Guidelines
+      const guidelines = `
+        <div class="absolute top-1/2 left-0 w-full border-t border-blue-400/20 pointer-events-none"></div>
+        <div class="absolute top-0 left-1/4 h-full border-l border-blue-400/20 pointer-events-none"></div>
+        <div class="absolute top-0 left-1/2 h-full border-l border-blue-400/20 pointer-events-none"></div>
+        <div class="absolute top-0 left-3/4 h-full border-l border-blue-400/20 pointer-events-none"></div>
+      `;
+
+      sheetWrapper.appendChild(grid);
+      sheetWrapper.insertAdjacentHTML('beforeend', guidelines);
+      this.elements.zineSheetsContainer.appendChild(sheetWrapper);
+    }
+
+    this.updatePreviewLayout();
+    this.applyPageStyles();
+  }
+
+  setupDragAndDrop(cell) {
+    cell.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/plain', cell.getAttribute('data-page-index'));
+      cell.classList.add('dragging');
+    });
+
+    cell.addEventListener('dragend', () => {
+      cell.classList.remove('dragging');
+      document.querySelectorAll('.page-cell').forEach(c => c.classList.remove('drag-over'));
+    });
+
+    cell.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      cell.classList.add('drag-over');
+    });
+
+    cell.addEventListener('dragleave', () => {
+      cell.classList.remove('drag-over');
+    });
+
+    cell.addEventListener('drop', (e) => {
+      e.preventDefault();
+      cell.classList.remove('drag-over');
+      const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+      const toIndex = parseInt(cell.getAttribute('data-page-index'));
+
+      if (fromIndex !== toIndex) {
+        this.emitter.emit('pagesSwapped', { fromIndex, toIndex });
+      }
+    });
+  }
+
+  updatePagePreview(pageIndex, dataUrl) {
+    const cell = this.elements.zineSheetsContainer.querySelector(`[data-page-index="${pageIndex}"]`);
+    if (cell) {
+      const img = cell.querySelector('.page-content-img');
+      const placeholder = cell.querySelector('.page-placeholder');
+      if (img && placeholder) {
+        img.src = dataUrl;
+        img.classList.remove('hidden');
+        placeholder.classList.add('hidden');
       }
     }
+  }
+
+  setActiveTab() {
+    // Obsolete
   }
 
   triggerFileUpload() {
