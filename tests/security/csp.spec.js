@@ -18,7 +18,11 @@ test.describe('Content Security Policy', () => {
     // Check for Google Fonts allowance
     expect(content).toContain('https://fonts.googleapis.com');
     expect(content).toContain('https://fonts.gstatic.com');
-    // Check that unsafe-inline is restricted (it's present but hopefully only for styles)
-    // We can't easily parse the full CSP string in this test without a library, but basic checks are good.
+    // Verify that script-src does not allow 'unsafe-inline' or 'unsafe-eval'
+    const scriptSrcMatch = content.match(/script-src\s+([^;]+)/);
+    expect(scriptSrcMatch).not.toBeNull();
+    const scriptSrc = scriptSrcMatch[1];
+    expect(scriptSrc).not.toContain("'unsafe-inline'");
+    expect(scriptSrc).not.toContain("'unsafe-eval'");
   });
 });
