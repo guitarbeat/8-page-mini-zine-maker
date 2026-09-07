@@ -306,6 +306,7 @@ export class Zine3DViewer {
       });
     });
     
+    // ⚡️ Bolt: Reuse front and back PlaneGeometry instances across all panel meshes to reduce memory allocation
     const frontGeometry = new THREE.PlaneGeometry(this.w, this.h, 4, 4);
     const backGeometry = new THREE.PlaneGeometry(this.w, this.h, 1, 1);
 
