@@ -80,6 +80,10 @@ export function partitionSupportedFiles(files) {
   const acceptedFiles = [];
   const rejectedFiles = [];
 
+  if (!Array.isArray(files)) {
+    return { acceptedFiles, rejectedFiles };
+  }
+
   files.forEach((file) => {
     if (classifyFileKind(file)) {
       acceptedFiles.push(file);
