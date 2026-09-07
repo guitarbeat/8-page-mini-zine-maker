@@ -59,26 +59,53 @@ test.describe('src/core/main.js initialization & theme toggle', () => {
     await page.close();
   });
 
-  test('handles theme toggle gracefully when theme elements are missing', async ({ page }) => {
+  test('handles theme toggle gracefully when theme toggle button is missing', async ({ page }) => {
     const result = await page.evaluate(() => {
       const btn = document.getElementById('theme-toggle');
-      const icon = document.getElementById('theme-icon');
       if (btn) btn.remove();
-      if (icon) icon.remove();
 
-      // Ensure no exceptions thrown when elements are missing
-      const btnCheck = document.getElementById('theme-toggle');
-      const iconCheck = document.getElementById('theme-icon');
-      return { btnCheck, iconCheck };
+      return {
+        btnCheck: document.getElementById('theme-toggle')
+      };
     });
 
     expect(result.btnCheck).toBeNull();
+  });
+
+  test('handles theme toggle gracefully when theme icon is missing', async ({ page }) => {
+    const result = await page.evaluate(() => {
+      const icon = document.getElementById('theme-icon');
+      if (icon) icon.remove();
+
+      return {
+        iconCheck: document.getElementById('theme-icon')
+      };
+    });
+
     expect(result.iconCheck).toBeNull();
+  });
+
+  test('falls back to default light theme when data-theme attribute is not set', async ({ page }) => {
+    const result = await page.evaluate(() => {
+      document.documentElement.removeAttribute('data-theme');
+      const initialThemeAttr = document.documentElement.getAttribute('data-theme');
+
+      const btn = document.getElementById('theme-toggle');
+      if (btn) btn.click();
+
+      const newThemeAttr = document.documentElement.getAttribute('data-theme');
+      const storageTheme = localStorage.getItem('zine-theme');
+
+      return { initialThemeAttr, newThemeAttr, storageTheme };
+    });
+
+    expect(result.initialThemeAttr).toBeNull();
+    expect(result.newThemeAttr).toBe('dark');
+    expect(result.storageTheme).toBe('dark');
   });
 
   test('initializes gridstack on DOMContentLoaded event', async ({ page }) => {
     const gridInitialized = await page.evaluate(() => {
-      // Dispatch DOMContentLoaded and verify no error occurs
       let eventFired = false;
       try {
         document.dispatchEvent(new Event('DOMContentLoaded'));
@@ -90,5 +117,12 @@ test.describe('src/core/main.js initialization & theme toggle', () => {
     });
 
     expect(gridInitialized).toBe(true);
+  });
+
+  test('initializes settings validation with window.app.ui on startup', async ({ page }) => {
+    const isValidationInitialized = await page.evaluate(() => {
+      return !!window.app && !!window.app.ui;
+    });
+    expect(isValidationInitialized).toBe(true);
   });
 });
