@@ -176,6 +176,12 @@ test.describe('Utils', () => {
       acceptedFiles: [malformedFiles[10]],
       rejectedFiles: malformedFiles.slice(0, 10)
     });
+
+    // Non-array inputs (null, undefined, non-array object, primitive)
+    expect(partitionSupportedFiles(null)).toEqual({ acceptedFiles: [], rejectedFiles: [] });
+    expect(partitionSupportedFiles(undefined)).toEqual({ acceptedFiles: [], rejectedFiles: [] });
+    expect(partitionSupportedFiles({})).toEqual({ acceptedFiles: [], rejectedFiles: [] });
+    expect(partitionSupportedFiles(42)).toEqual({ acceptedFiles: [], rejectedFiles: [] });
   });
 
   test('resizeAndFillArray', () => {
