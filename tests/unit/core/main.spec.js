@@ -125,4 +125,24 @@ test.describe('src/core/main.js initialization & theme toggle', () => {
     });
     expect(isValidationInitialized).toBe(true);
   });
+  test("toggles correctly when data-theme attribute is pre-set to dark", async ({ page }) => {
+    const result = await page.evaluate(() => {
+      document.documentElement.setAttribute("data-theme", "dark");
+      const themeIcon = document.getElementById("theme-icon");
+      if (themeIcon) themeIcon.textContent = "light_mode";
+
+      const btn = document.getElementById("theme-toggle");
+      if (btn) btn.click();
+
+      return {
+        newThemeAttr: document.documentElement.getAttribute("data-theme"),
+        storageTheme: localStorage.getItem("zine-theme"),
+        iconText: themeIcon?.textContent?.trim()
+      };
+    });
+
+    expect(result.newThemeAttr).toBe("light");
+    expect(result.storageTheme).toBe("light");
+    expect(result.iconText).toBe("dark_mode");
+  });
 });
