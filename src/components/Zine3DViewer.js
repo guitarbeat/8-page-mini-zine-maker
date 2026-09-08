@@ -99,28 +99,48 @@ export class Zine3DViewer {
   }
 
   initScene() {
-    this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color('#1a1a1a');
-
     const initialWidth = this.container.clientWidth || 1;
     const initialHeight = this.container.clientHeight || 1;
 
-    this._initCamera(initialWidth, initialHeight);
-
-    if (!this._initRenderer(initialWidth, initialHeight)) {
+    if (!this._initSceneAndComponents(initialWidth, initialHeight)) {
       this.initFallbackScene(initialWidth, initialHeight);
       return;
+    }
+
+    this._setupResizeHandler();
+    this.animate();
+  }
+
+  /**
+   * Initializes WebGL scene, camera, renderer, controls, lighting, and environment stage.
+   * @private
+   * @param {number} width - Initial container width.
+   * @param {number} height - Initial container height.
+   * @returns {boolean} True if WebGL renderer was successfully initialized, false otherwise.
+   */
+  _initSceneAndComponents(width, height) {
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color('#1a1a1a');
+
+    this._initCamera(width, height);
+
+    if (!this._initRenderer(width, height)) {
+      return false;
     }
 
     this._initControls();
     this._initLighting();
     this.createStageEnvironment();
+    return true;
+  }
 
-    // Resize handler
+  /**
+   * Sets up window resize event listener.
+   * @private
+   */
+  _setupResizeHandler() {
     this.onWindowResize = () => this.refreshLayout();
     window.addEventListener('resize', this.onWindowResize);
-
-    this.animate();
   }
 
   _initCamera(width, height) {
