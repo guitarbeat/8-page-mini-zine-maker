@@ -4,7 +4,14 @@ import { MINI_ZINE_STACKS, computeMiniZineFoldState } from '../utils/miniZineFol
 
 import { normalizePreviewPage } from '../utils/previewHelpers.js';
 
+/**
+ * 3D Fold Viewer component utilizing Three.js for interactive zine fold simulation.
+ */
 export class Zine3DViewer {
+  /**
+   * Creates an instance of Zine3DViewer.
+   * @param {HTMLElement} containerElement - DOM container element for the 3D canvas viewport.
+   */
   constructor(containerElement) {
     this.container = containerElement;
 
@@ -15,6 +22,10 @@ export class Zine3DViewer {
     this.initScene();
   }
 
+  /**
+   * Initializes instance state arrays, temporary vectors/matrices, and animation state flags.
+   * @private
+   */
   _initCoreProperties() {
     this.pages = [];
     this.stacks = [];
@@ -34,6 +45,10 @@ export class Zine3DViewer {
     this.currentFoldProgress = 0;
   }
 
+  /**
+   * Initializes visual styling dimensions, material colors, and guide line widths.
+   * @private
+   */
   _initVisualConfig() {
     this.w = 1.0;
     this.h = 1.414; // A-series proportion
@@ -48,6 +63,10 @@ export class Zine3DViewer {
     this.slitGuideColor = 0xd32f2f;
   }
 
+  /**
+   * Initializes structural panel definitions, seam connections, and fold/slit guide mappings.
+   * @private
+   */
   _initStructuralDefinitions() {
     this.panelDefinitions = {
       1: { stackIndex: 3, isTop: false }, // Cover
