@@ -657,4 +657,100 @@ test.describe('AppController', () => {
     }
   });
 
+
+  test("handleFileSelected triggers processFileQueue for PDF files when processPdfUpload throws async error", async () => {
+    const { AppController } = await import("../../src/core/AppController.js");
+    const { toast } = await import("../../src/components/Toast.js");
+
+    let toastErrorTitle = null;
+    let toastErrorMessage = null;
+    const originalToastError = toast.error;
+    toast.error = (title, message) => {
+      toastErrorTitle = title;
+      toastErrorMessage = message;
+    };
+
+    try {
+      const controller = new AppController();
+      let statusText = null;
+      let statusType = null;
+      controller.ui.setStatus = (text, type) => {
+        statusText = text;
+        statusType = type;
+      };
+
+      controller.processPdfUpload = async () => {
+        throw new Error("Async PDF queue processing error");
+      };
+
+      const file = new File(["dummy pdf content"], "queued-error-doc.pdf", { type: "application/pdf" });
+
+      controller.handleFileSelected(file);
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      const record = controller.state.uploadedFiles[0];
+      expect(record).toBeDefined();
+      expect(record.name).toBe("queued-error-doc.pdf");
+      expect(record.status).toBe("Failed");
+      expect(statusText).toBe("Failed: queued-error-doc.pdf");
+      expect(statusType).toBe("error");
+      expect(toastErrorTitle).toBe("Import Failed");
+      expect(toastErrorMessage).toBe("Async PDF queue processing error");
+      expect(controller.state.isProcessingQueue).toBe(false);
+    } finally {
+      toast.error = originalToastError;
+    }
+  });
+
+  test("handleFileSelected handles concurrent enqueuing when queue is already processing and secondary item fails", async () => {
+    const { AppController } = await import("../../src/core/AppController.js");
+    const { toast } = await import("../../src/components/Toast.js");
+
+    const toastErrors = [];
+    const originalToastError = toast.error;
+    toast.error = (title, message) => {
+      toastErrors.push({ title, message });
+    };
+
+    try {
+      const controller = new AppController();
+      controller.ui.setStatus = () => {};
+      const progressCalls = [];
+      controller.ui.modal.showProgress = (show) => {
+        progressCalls.push(show);
+      };
+
+      controller.processImageUpload = async () => {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      };
+
+      controller.processPdfUpload = async () => {
+        throw new Error("Secondary file processing error");
+      };
+
+      const file1 = new File(["img data"], "first-success.png", { type: "image/png" });
+      const file2 = new File(["pdf data"], "second-fail.pdf", { type: "application/pdf" });
+
+      controller.handleFileSelected(file1);
+      expect(controller.state.isProcessingQueue).toBe(true);
+
+      controller.handleFileSelected(file2);
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      expect(controller.state.uploadedFiles.length).toBe(2);
+      expect(controller.state.uploadedFiles[1].status).toBe("Failed");
+      expect(toastErrors.length).toBe(1);
+      expect(toastErrors[0]).toEqual({
+        title: "Import Failed",
+        message: "Secondary file processing error"
+      });
+      expect(progressCalls.includes(false)).toBe(true);
+      expect(controller.state.isProcessingQueue).toBe(false);
+    } finally {
+      toast.error = originalToastError;
+    }
+  });
+
 });
