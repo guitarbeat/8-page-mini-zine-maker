@@ -166,15 +166,19 @@ test.describe('Utils', () => {
       "string_file",
       true,
       {},
+      { type: 'application/pdf' },
+      { name: 'document.pdf' },
       { name: 123 },
       { name: ".pdf" },
       { name: "test.pdf", type: null },
       { name: "test.png", type: 123 },
+      { name: {}, type: 'application/pdf' },
+      { name: 'image.png', type: [] },
       { name: "test.pdf", type: "application/pdf" }
     ];
     expect(partitionSupportedFiles(malformedFiles)).toEqual({
-      acceptedFiles: [malformedFiles[10]],
-      rejectedFiles: malformedFiles.slice(0, 10)
+      acceptedFiles: [malformedFiles[14]],
+      rejectedFiles: malformedFiles.slice(0, 14)
     });
 
     // Non-array inputs (null, undefined, non-array object, primitive)
