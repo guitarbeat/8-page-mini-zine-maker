@@ -159,6 +159,8 @@ test.describe('Utils', () => {
     });
 
     // Array with edge cases and malformed objects (null, undefined, primitives, missing/invalid properties)
+    const sym = Symbol("file");
+    const fn = () => {};
     const malformedFiles = [
       null,
       undefined,
@@ -174,17 +176,23 @@ test.describe('Utils', () => {
       { name: "test.png", type: 123 },
       { name: {}, type: 'application/pdf' },
       { name: 'image.png', type: [] },
+      { name: sym, type: 'application/pdf' },
+      { name: NaN, type: 'application/pdf' },
+      { name: fn, type: 'application/pdf' },
+      { name: "test.", type: "application/pdf" },
+      { name: "UPPER.PDF", type: "application/pdf" },
       { name: "test.pdf", type: "application/pdf" }
     ];
     expect(partitionSupportedFiles(malformedFiles)).toEqual({
-      acceptedFiles: [malformedFiles[14]],
-      rejectedFiles: malformedFiles.slice(0, 14)
+      acceptedFiles: [malformedFiles[18], malformedFiles[19]],
+      rejectedFiles: malformedFiles.slice(0, 18)
     });
 
-    // Non-array inputs (null, undefined, non-array object, primitive)
+    // Non-array inputs (null, undefined, non-array object, array-like object, primitive)
     expect(partitionSupportedFiles(null)).toEqual({ acceptedFiles: [], rejectedFiles: [] });
     expect(partitionSupportedFiles(undefined)).toEqual({ acceptedFiles: [], rejectedFiles: [] });
     expect(partitionSupportedFiles({})).toEqual({ acceptedFiles: [], rejectedFiles: [] });
+    expect(partitionSupportedFiles({ 0: { name: "test.pdf", type: "application/pdf" }, length: 1 })).toEqual({ acceptedFiles: [], rejectedFiles: [] });
     expect(partitionSupportedFiles(42)).toEqual({ acceptedFiles: [], rejectedFiles: [] });
   });
 
