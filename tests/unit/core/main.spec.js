@@ -125,24 +125,41 @@ test.describe('src/core/main.js initialization & theme toggle', () => {
     });
     expect(isValidationInitialized).toBe(true);
   });
-  test("toggles correctly when data-theme attribute is pre-set to dark", async ({ page }) => {
-    const result = await page.evaluate(() => {
-      document.documentElement.setAttribute("data-theme", "dark");
-      const themeIcon = document.getElementById("theme-icon");
-      if (themeIcon) themeIcon.textContent = "light_mode";
 
-      const btn = document.getElementById("theme-toggle");
+  test('toggles correctly when data-theme attribute is pre-set to dark', async ({ page }) => {
+    const result = await page.evaluate(() => {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      const themeIcon = document.getElementById('theme-icon');
+      if (themeIcon) themeIcon.textContent = 'light_mode';
+
+      const btn = document.getElementById('theme-toggle');
       if (btn) btn.click();
 
       return {
-        newThemeAttr: document.documentElement.getAttribute("data-theme"),
-        storageTheme: localStorage.getItem("zine-theme"),
+        newThemeAttr: document.documentElement.getAttribute('data-theme'),
+        storageTheme: localStorage.getItem('zine-theme'),
         iconText: themeIcon?.textContent?.trim()
       };
     });
 
-    expect(result.newThemeAttr).toBe("light");
-    expect(result.storageTheme).toBe("light");
-    expect(result.iconText).toBe("dark_mode");
+    expect(result.newThemeAttr).toBe('light');
+    expect(result.storageTheme).toBe('light');
+    expect(result.iconText).toBe('dark_mode');
+  });
+
+  test('toggles theme multiple times consecutively keeping state consistent', async ({ page }) => {
+    const states = [];
+    for (let i = 0; i < 4; i++) {
+      await page.click('#theme-toggle');
+      const currentAttr = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+      const currentStorage = await page.evaluate(() => localStorage.getItem('zine-theme'));
+      const iconText = await page.evaluate(() => document.getElementById('theme-icon')?.textContent?.trim());
+      states.push({ currentAttr, currentStorage, iconText });
+    }
+
+    expect(states[0]).toEqual({ currentAttr: 'dark', currentStorage: 'dark', iconText: 'light_mode' });
+    expect(states[1]).toEqual({ currentAttr: 'light', currentStorage: 'light', iconText: 'dark_mode' });
+    expect(states[2]).toEqual({ currentAttr: 'dark', currentStorage: 'dark', iconText: 'light_mode' });
+    expect(states[3]).toEqual({ currentAttr: 'light', currentStorage: 'light', iconText: 'dark_mode' });
   });
 });
